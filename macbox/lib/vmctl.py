@@ -27,13 +27,14 @@ class QMP:
                 self.s = socket.socket(socket.AF_UNIX); self.s.connect(SOCK); break
             except OSError:
                 time.sleep(0.1)
-        self.f = self.s.makefile("rw")
-        json.loads(self.f.readline())
+        self.r = self.s.makefile("r")
+        self.w = self.s.makefile("w")
+        json.loads(self.r.readline())
         self.cmd("qmp_capabilities")
     def cmd(self, name, **args):
-        self.f.write(json.dumps({"execute": name, "arguments": args} if args else {"execute": name}) + "\n"); self.f.flush()
+        self.w.write(json.dumps({"execute": name, "arguments": args} if args else {"execute": name}) + "\n"); self.w.flush()
         while True:
-            r = json.loads(self.f.readline())
+            r = json.loads(self.r.readline())
             if "return" in r: return r["return"]
             if "error" in r: raise SystemExit(f"{name}: {r['error']}")
     def ev(self, events):
