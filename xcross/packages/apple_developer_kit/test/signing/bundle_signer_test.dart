@@ -1,0 +1,993 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:apple_developer_kit/shared/errors/errors.dart';
+import 'package:apple_developer_kit/shared/signing/bundle_signer.dart';
+import 'package:apple_developer_kit/shared/signing/signing_asset.dart';
+import 'package:apple_developer_kit/src/shared/signing/bundle_paths.dart';
+import 'package:cli_kit/host/linux/linux_host.dart';
+import 'package:cli_kit/host/windows/windows_host.dart';
+import 'package:crypto/crypto.dart';
+import 'package:path/path.dart' as p;
+import 'package:propertylistserialization/propertylistserialization.dart';
+import 'package:test/test.dart';
+
+import '../support/host_services.dart';
+import '../support/mapped_apple_fixture.dart';
+import '../support/signing_fixture.dart';
+
+void main() {
+  test(
+    'bundle paths serialize selected host components without corruption',
+    () {
+      final windows = WindowsHost(currentDirectory: r'C:\workspace').paths;
+      final posix = LinuxHost(currentDirectory: '/workspace').paths;
+      expect(
+        bundleRelativePath(
+          r'C:\workspace\App.app',
+          r'C:\workspace\App.app\Assets\image.png',
+          paths: windows,
+        ),
+        'Assets/image.png',
+      );
+      expect(
+        bundleRelativePath(
+          r'\\server\share\App.app',
+          r'\\server\share\App.app\Assets\image.png',
+          paths: windows,
+        ),
+        'Assets/image.png',
+      );
+      expect(
+        bundleRelativePath(
+          '/workspace/App.app',
+          r'/workspace/App.app/Assets/image\literal.png',
+          paths: posix,
+        ),
+        r'Assets/image\literal.png',
+      );
+      expect(bundleRelativePath('App.app', 'App.app', paths: windows), '.');
+      expect(
+        () => bundleFail(
+          r'C:\workspace\App.app',
+          r'C:\workspace\App.app\Assets\image.png',
+          'invalid resource',
+          paths: windows,
+        ),
+        throwsA(
+          isA<AppleError>().having(
+            (error) => error.message,
+            'message',
+            'Bundle "Assets/image.png" is invalid: invalid resource.',
+          ),
+        ),
+      );
+    },
+  );
+
+  final signingTime = DateTime.utc(2030, 2, 3, 4, 5, 6);
+  late Directory temporaryDirectory;
+  late SigningAsset exactAsset;
+  late SigningAsset wildcardAsset;
+
+  setUpAll(() async {
+    temporaryDirectory = Directory.systemTemp.createTempSync(
+      'xcross_bundle_signer-',
+    );
+    exactAsset = await _signingAsset(
+      temporaryDirectory,
+      'exact',
+      'TESTTEAM123.dev.xcross.Runner',
+    );
+    wildcardAsset = await _signingAsset(
+      temporaryDirectory,
+      'wildcard',
+      'TESTTEAM123.dev.xcross.*',
+    );
+  });
+
+  tearDownAll(() {
+    temporaryDirectory.deleteSync(recursive: true);
+  });
+
+  test(
+    'mapped POSIX resources preserve literal backslashes in both seals',
+    () async {
+      final fixture = MappedAppleFixture();
+      addTearDown(fixture.dispose);
+      final app = _app(
+        Directory(fixture.backingRoot),
+        'literal-path',
+        'dev.xcross.Runner',
+      );
+      const name = r'resource\literal.txt';
+      File(p.join(app.path, name)).writeAsStringSync('literal resource');
+      await BundleSigner(
+        exactAsset,
+        hostServices: fixture.services,
+      ).signApp(fixture.logicalPath(app.path), signingTime: signingTime);
+      final resources = _plist(
+        File(
+          p.join(app.path, '_CodeSignature', 'CodeResources'),
+        ).readAsBytesSync(),
+      );
+      for (final key in ['files', 'files2']) {
+        final files = resources[key]! as Map;
+        expect(files, contains(name));
+        expect(files, isNot(contains('resource/literal.txt')));
+      }
+    },
+    skip: Platform.isWindows,
+  );
+
+  test(
+    testOn: '!windows',
+
+    'mapped filesystem signs bundle and preserves containment and modes',
+    () async {
+      final fixture = MappedAppleFixture();
+      addTearDown(fixture.dispose);
+      final physicalApp = _app(
+        Directory(fixture.backingRoot),
+        'mapped',
+        'dev.xcross.Runner',
+      );
+      final appPath = fixture.logicalPath(physicalApp.path);
+      File(
+        p.join(physicalApp.path, 'resource.txt'),
+      ).writeAsStringSync('mapped resource');
+      Link(p.join(physicalApp.path, 'alias')).createSync('resource.txt');
+      Directory(p.join(physicalApp.path, '_CodeSignature')).createSync();
+      File(
+        p.join(physicalApp.path, '_CodeSignature', 'stale'),
+      ).writeAsStringSync('stale');
+      File(
+        p.join(physicalApp.path, 'embedded.mobileprovision'),
+      ).writeAsStringSync('stale');
+      final signer = BundleSigner(exactAsset, hostServices: fixture.services);
+      await signer.signApp(appPath, signingTime: signingTime);
+      expect(
+        File(p.join(appPath, 'embedded.mobileprovision')).existsSync(),
+        isFalse,
+      );
+      expect(
+        File(
+          p.join(physicalApp.path, 'embedded.mobileprovision'),
+        ).readAsBytesSync(),
+        exactAsset.profileCmsBytes,
+      );
+      expect(
+        File(p.join(physicalApp.path, '_CodeSignature', 'stale')).existsSync(),
+        isFalse,
+      );
+      final resourcePath = p.join(
+        physicalApp.path,
+        '_CodeSignature',
+        'CodeResources',
+      );
+      final first = File(resourcePath).readAsBytesSync();
+      expect((_plist(first)['files2']! as Map)['alias'], {
+        'symlink': 'resource.txt',
+      });
+      expect(fixture.permissions.preserved, hasLength(4));
+      await signer.signApp(appPath, signingTime: signingTime);
+      expect(File(resourcePath).readAsBytesSync(), first);
+      expect(Directory(fixture.logicalRoot).listSync(recursive: true), isEmpty);
+      File(p.join(fixture.backingRoot, 'outside')).writeAsStringSync('outside');
+      Link(p.join(physicalApp.path, 'escape')).createSync('../outside');
+      await expectLater(
+        signer.signApp(appPath),
+        throwsA(
+          isA<AppleError>().having(
+            (error) => error.message,
+            'message',
+            contains('symlink target escapes'),
+          ),
+        ),
+      );
+      Link(p.join(physicalApp.path, 'escape')).deleteSync();
+      final originalInfo = File(
+        p.join(physicalApp.path, 'Info.plist'),
+      ).readAsBytesSync();
+      File(p.join(physicalApp.path, 'Info.plist')).deleteSync();
+      File(
+        p.join(physicalApp.path, 'Info-copy.plist'),
+      ).writeAsBytesSync(originalInfo);
+      Link(
+        p.join(physicalApp.path, 'Info.plist'),
+      ).createSync('Info-copy.plist');
+      await expectLater(
+        signer.signApp(appPath),
+        throwsA(
+          isA<AppleError>().having(
+            (error) => error.message,
+            'message',
+            contains('Info.plist'),
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'signs children first and emits deterministic zsign file seals',
+    () async {
+      final app = _app(temporaryDirectory, 'complete', 'dev.xcross.Runner');
+      final appFramework = p.join(app.path, 'Frameworks', 'App.framework');
+      final flutterFramework = p.join(
+        app.path,
+        'Frameworks',
+        'Flutter.framework',
+      );
+      File(p.join(app.path, 'resource.txt')).writeAsStringSync('resource');
+      Directory(p.join(app.path, 'Base.lproj')).createSync();
+      File(
+        p.join(app.path, 'Base.lproj', 'Localizable.strings'),
+      ).writeAsStringSync('optional');
+      Directory(p.join(app.path, '_CodeSignature')).createSync();
+      File(
+        p.join(app.path, '_CodeSignature', 'stale'),
+      ).writeAsStringSync('old');
+      for (final framework in [appFramework, flutterFramework]) {
+        Directory(p.join(framework, '_CodeSignature')).createSync();
+        File(
+          p.join(framework, '_CodeSignature', 'stale'),
+        ).writeAsStringSync('old');
+        File(
+          p.join(framework, 'embedded.mobileprovision'),
+        ).writeAsStringSync('nested');
+      }
+
+      final signer = BundleSigner(exactAsset, hostServices: testHostServices);
+      await signer.signApp(app.path, signingTime: signingTime);
+
+      expect(
+        File(p.join(app.path, 'embedded.mobileprovision')).readAsBytesSync(),
+        orderedEquals(exactAsset.profileCmsBytes),
+      );
+      for (final framework in [appFramework, flutterFramework]) {
+        expect(
+          File(p.join(framework, 'embedded.mobileprovision')).existsSync(),
+          isFalse,
+        );
+        expect(
+          File(p.join(framework, '_CodeSignature', 'stale')).existsSync(),
+          isFalse,
+        );
+      }
+      expect(
+        File(p.join(app.path, '_CodeSignature', 'stale')).existsSync(),
+        isFalse,
+      );
+
+      final rootResourcesFile = File(
+        p.join(app.path, '_CodeSignature', 'CodeResources'),
+      );
+      final rootResourcesBytes = rootResourcesFile.readAsBytesSync();
+      expect(utf8.decode(rootResourcesBytes), startsWith('<?xml'));
+      final rootResources = _plist(rootResourcesBytes);
+      final files = _map(rootResources['files']);
+      final files2 = _map(rootResources['files2']);
+      expect(files, isNot(contains('Runner')));
+      expect(files2, isNot(contains('Runner')));
+      expect(files, isNot(contains('_CodeSignature/stale')));
+      expect(files2, isNot(contains('_CodeSignature/stale')));
+      expect(
+        _bytes(files['resource.txt']),
+        orderedEquals(sha1.convert(utf8.encode('resource')).bytes),
+      );
+      expect(
+        _bytes(_map(files2['resource.txt'])['hash2']),
+        orderedEquals(sha256.convert(utf8.encode('resource')).bytes),
+      );
+      expect(_map(files['Base.lproj/Localizable.strings'])['optional'], isTrue);
+      expect(
+        _map(files2['Base.lproj/Localizable.strings'])['optional'],
+        isTrue,
+      );
+
+      final appExecutable = File(p.join(appFramework, 'App')).readAsBytesSync();
+      expect(
+        _bytes(files['Frameworks/App.framework/App']),
+        orderedEquals(sha1.convert(appExecutable).bytes),
+      );
+      final appSeal = _map(files2['Frameworks/App.framework/App']);
+      expect(
+        _bytes(appSeal['hash']),
+        orderedEquals(sha1.convert(appExecutable).bytes),
+      );
+      expect(
+        _bytes(appSeal['hash2']),
+        orderedEquals(sha256.convert(appExecutable).bytes),
+      );
+      expect(files2, isNot(contains('Frameworks/App.framework')));
+
+      final pluginPath = p.join(app.path, 'Frameworks', 'plugin.dylib');
+      final pluginBytes = File(pluginPath).readAsBytesSync();
+      expect(
+        _bytes(files['Frameworks/plugin.dylib']),
+        orderedEquals(sha1.convert(pluginBytes).bytes),
+      );
+      final pluginSeal = _map(files2['Frameworks/plugin.dylib']);
+      expect(
+        _bytes(pluginSeal['hash']),
+        orderedEquals(sha1.convert(pluginBytes).bytes),
+      );
+      expect(
+        _bytes(pluginSeal['hash2']),
+        orderedEquals(sha256.convert(pluginBytes).bytes),
+      );
+
+      final rules = _map(rootResources['rules']);
+      final rules2 = _map(rootResources['rules2']);
+      expect(rules['^.*'], isTrue);
+      expect(_map(rules[r'^.*\.lproj/'])['weight'], 1000.0);
+      expect(_map(rules2[r'^Info\.plist$'])['omit'], isTrue);
+      expect(_map(rules2[r'^(.*/)?\.DS_Store$'])['weight'], 2000.0);
+
+      final frameworkResources = _plist(
+        File(
+          p.join(appFramework, '_CodeSignature', 'CodeResources'),
+        ).readAsBytesSync(),
+      );
+      expect(_map(frameworkResources['files']), isNot(contains('App')));
+      expect(_map(frameworkResources['files2']), isNot(contains('App')));
+
+      expect(
+        _entitlements(File(p.join(app.path, 'Runner')).readAsBytesSync()),
+        containsPair('application-identifier', 'TESTTEAM123.dev.xcross.Runner'),
+      );
+      expect(_entitlements(appExecutable), isEmpty);
+      expect(_entitlements(pluginBytes), isEmpty);
+
+      final first = <String, Uint8List>{
+        for (final path in [
+          p.join(app.path, 'Runner'),
+          p.join(appFramework, 'App'),
+          p.join(flutterFramework, 'Flutter'),
+          pluginPath,
+          rootResourcesFile.path,
+          p.join(appFramework, '_CodeSignature', 'CodeResources'),
+          p.join(flutterFramework, '_CodeSignature', 'CodeResources'),
+        ])
+          path: File(path).readAsBytesSync(),
+      };
+      await signer.signApp(app.path, signingTime: signingTime);
+      for (final entry in first.entries) {
+        expect(
+          File(entry.key).readAsBytesSync(),
+          orderedEquals(entry.value),
+          reason: entry.key,
+        );
+      }
+
+      File(p.join(app.path, 'resource.txt')).writeAsStringSync('tampered');
+      expect(
+        _bytes(
+          _map(
+            _plist(rootResourcesFile.readAsBytesSync())['files'],
+          )['resource.txt'],
+        ),
+        isNot(orderedEquals(sha1.convert(utf8.encode('tampered')).bytes)),
+      );
+    },
+  );
+
+  test(
+    'accepts wildcard profiles and rejects incompatible exact profiles',
+    () async {
+      final wildcardApp = _app(
+        temporaryDirectory,
+        'wildcard-app',
+        'dev.xcross.Wildcard',
+      );
+      await BundleSigner(
+        wildcardAsset,
+        hostServices: testHostServices,
+      ).preflight(wildcardApp.path);
+
+      await expectLater(
+        BundleSigner(
+          exactAsset,
+          hostServices: testHostServices,
+        ).preflight(wildcardApp.path),
+        throwsA(
+          isA<AppleError>().having(
+            (error) => error.message,
+            'message',
+            allOf(
+              contains('dev.xcross.Wildcard'),
+              contains('TESTTEAM123.dev.xcross.Runner'),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+
+  test('seals safe symlink targets and rejects out-of-tree targets', () async {
+    final safeApp = _app(temporaryDirectory, 'safe-link', 'dev.xcross.Runner');
+    File(p.join(safeApp.path, 'target.txt')).writeAsStringSync('target');
+    if (!_link(p.join(safeApp.path, 'alias.txt'), 'target.txt')) {
+      markTestSkipped('symbolic links are unavailable on this host');
+      return;
+    }
+    await BundleSigner(
+      exactAsset,
+      hostServices: testHostServices,
+    ).signApp(safeApp.path, signingTime: signingTime);
+    final resources = _plist(
+      File(
+        p.join(safeApp.path, '_CodeSignature', 'CodeResources'),
+      ).readAsBytesSync(),
+    );
+    expect(
+      _map(_map(resources['files'])['alias.txt'])['symlink'],
+      'target.txt',
+    );
+    expect(
+      _map(_map(resources['files2'])['alias.txt'])['symlink'],
+      'target.txt',
+    );
+
+    final unsafeApp = _app(
+      temporaryDirectory,
+      'unsafe-link',
+      'dev.xcross.Runner',
+    );
+    final outside = File(p.join(temporaryDirectory.path, 'outside.txt'))
+      ..writeAsStringSync('outside');
+    expect(_link(p.join(unsafeApp.path, 'escape'), outside.path), isTrue);
+    await expectLater(
+      BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+      ).preflight(unsafeApp.path),
+      throwsA(
+        isA<AppleError>().having(
+          (error) => error.message,
+          'message',
+          allOf(contains('escape'), contains('escapes')),
+        ),
+      ),
+    );
+  });
+
+  test('rejects unsupported nested bundles before any mutation', () async {
+    final app = _app(temporaryDirectory, 'unsupported', 'dev.xcross.Runner');
+    final profile = File(p.join(app.path, 'embedded.mobileprovision'))
+      ..writeAsStringSync('old-profile');
+    final signature = File(p.join(app.path, '_CodeSignature', 'old'))
+      ..createSync(recursive: true);
+    signature.writeAsStringSync('old-signature');
+    final runner = File(p.join(app.path, 'Runner'));
+    final runnerBefore = runner.readAsBytesSync();
+    Directory(
+      p.join(app.path, 'PlugIns', 'Bad.appex'),
+    ).createSync(recursive: true);
+
+    await expectLater(
+      BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+      ).signApp(app.path, signingTime: signingTime),
+      throwsA(
+        isA<AppleError>().having(
+          (error) => error.message,
+          'message',
+          contains('PlugIns'),
+        ),
+      ),
+    );
+    expect(profile.readAsStringSync(), 'old-profile');
+    expect(signature.readAsStringSync(), 'old-signature');
+    expect(runner.readAsBytesSync(), orderedEquals(runnerBefore));
+
+    final unknown = _app(
+      temporaryDirectory,
+      'unknown-bundle',
+      'dev.xcross.Runner',
+    );
+    final hiddenCode = Directory(p.join(unknown.path, 'HiddenCode'))
+      ..createSync();
+    _writeInfo(hiddenCode.path, 'Hidden', 'dev.xcross.Hidden');
+    File(p.join(hiddenCode.path, 'Hidden')).writeAsStringSync('not Mach-O');
+    await expectLater(
+      BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+      ).preflight(unknown.path),
+      throwsA(
+        isA<AppleError>().having(
+          (error) => error.message,
+          'message',
+          allOf(
+            contains('HiddenCode'),
+            contains('unsupported nested code bundle'),
+          ),
+        ),
+      ),
+    );
+  });
+
+  test(
+    'seals resource-only .bundle directories inside frameworks (#118)',
+    () async {
+      final app = _app(temporaryDirectory, 'cast', 'dev.xcross.Runner');
+      final framework = p.join(app.path, 'Frameworks', 'GoogleCast.framework');
+      _framework(
+        p.join(app.path, 'Frameworks'),
+        'GoogleCast',
+        'com.google.GoogleCast',
+      );
+      final resources = p.join(framework, 'GoogleCastCoreResources.bundle');
+      File(
+        p.join(resources, 'en.lproj', 'GoogleCastCore.strings'),
+      ).createSync(recursive: true);
+      File(
+        p.join(resources, 'CastFrameworkDB.momd', 'Info.plist'),
+      ).createSync(recursive: true);
+      // A SwiftPM resource bundle at the app root, which also has no code.
+      final swiftpmBundle = Directory(p.join(app.path, 'Package_Target.bundle'))
+        ..createSync();
+      File(p.join(swiftpmBundle.path, 'Info.plist')).writeAsStringSync(
+        PropertyListSerialization.stringWithPropertyList({
+          'CFBundleIdentifier': 'Package.Target.resources',
+        }),
+      );
+      File(p.join(swiftpmBundle.path, 'data.json')).writeAsStringSync('{}');
+
+      await BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+      ).signApp(app.path, signingTime: signingTime);
+
+      final frameworkSeal = _plist(
+        File(
+          p.join(framework, '_CodeSignature', 'CodeResources'),
+        ).readAsBytesSync(),
+      );
+      final frameworkFiles = _map(frameworkSeal['files2']);
+      expect(
+        frameworkFiles.keys,
+        containsAll(<String>[
+          'GoogleCastCoreResources.bundle/en.lproj/GoogleCastCore.strings',
+          'GoogleCastCoreResources.bundle/CastFrameworkDB.momd/Info.plist',
+        ]),
+      );
+      final rootSeal = _plist(
+        File(
+          p.join(app.path, '_CodeSignature', 'CodeResources'),
+        ).readAsBytesSync(),
+      );
+      expect(
+        _map(rootSeal['files2']).keys,
+        containsAll(<String>[
+          'Package_Target.bundle/Info.plist',
+          'Package_Target.bundle/data.json',
+        ]),
+      );
+    },
+  );
+
+  test('still rejects .bundle directories that carry code', () async {
+    final executable = _app(
+      temporaryDirectory,
+      'bundle-executable',
+      'dev.xcross.Runner',
+    );
+    final loadable = Directory(p.join(executable.path, 'Loadable.bundle'))
+      ..createSync();
+    _writeInfo(loadable.path, 'Loadable', 'dev.xcross.Loadable');
+    File(p.join(loadable.path, 'Loadable')).writeAsBytesSync(_macho());
+    await expectLater(
+      BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+      ).preflight(executable.path),
+      throwsA(
+        isA<AppleError>().having(
+          (error) => error.message,
+          'message',
+          allOf(
+            contains('Loadable.bundle'),
+            contains('unsupported nested code bundle'),
+          ),
+        ),
+      ),
+    );
+
+    final hidden = _app(
+      temporaryDirectory,
+      'bundle-hidden-macho',
+      'dev.xcross.Runner',
+    );
+    final resources = Directory(p.join(hidden.path, 'Resources.bundle'))
+      ..createSync();
+    File(p.join(resources.path, 'payload')).writeAsBytesSync(_macho());
+    await expectLater(
+      BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+      ).preflight(hidden.path),
+      throwsA(
+        isA<AppleError>().having(
+          (error) => error.message,
+          'message',
+          allOf(
+            contains('Resources.bundle/payload'),
+            contains('unknown nested Mach-O code'),
+          ),
+        ),
+      ),
+    );
+  });
+
+  test('preflights every loose Mach-O before any mutation', () async {
+    final app = _app(temporaryDirectory, 'bad-macho', 'dev.xcross.Runner');
+    final profile = File(p.join(app.path, 'embedded.mobileprovision'))
+      ..writeAsStringSync('old-profile');
+    final runner = File(p.join(app.path, 'Runner'));
+    final runnerBefore = runner.readAsBytesSync();
+    File(
+      p.join(app.path, 'Frameworks', 'bad.dylib'),
+    ).writeAsBytesSync([0xca, 0xfe, 0xba, 0xbe]);
+
+    await expectLater(
+      BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+      ).signApp(app.path, signingTime: signingTime),
+      throwsA(
+        isA<AppleError>().having(
+          (error) => error.message,
+          'message',
+          allOf(contains('Frameworks/bad.dylib'), contains('FAT')),
+        ),
+      ),
+    );
+    expect(profile.readAsStringSync(), 'old-profile');
+    expect(runner.readAsBytesSync(), orderedEquals(runnerBefore));
+  });
+
+  test('requires an app directory and complete bundle metadata', () async {
+    final file = File(p.join(temporaryDirectory.path, 'input.ipa'))
+      ..writeAsStringSync('ipa');
+    await expectLater(
+      BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+      ).preflight(file.path),
+      throwsA(
+        isA<AppleError>().having(
+          (error) => error.message,
+          'message',
+          contains('.app directory'),
+        ),
+      ),
+    );
+
+    final app = Directory(p.join(temporaryDirectory.path, 'missing.app'))
+      ..createSync();
+    await expectLater(
+      BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+      ).preflight(app.path),
+      throwsA(
+        isA<AppleError>().having(
+          (error) => error.message,
+          'message',
+          contains('Info.plist'),
+        ),
+      ),
+    );
+  });
+
+  test('signs an embedded app extension with its own profile', () async {
+    final app = _app(temporaryDirectory, 'withappex', 'dev.xcross.Runner');
+    const extensionId = 'dev.xcross.Runner.Share';
+    _appExtension(app.path, 'Share', extensionId);
+    final extensionAsset = await _signingAsset(
+      temporaryDirectory,
+      'appex',
+      'TESTTEAM123.$extensionId',
+    );
+
+    await BundleSigner(
+      exactAsset,
+      extensionAssets: {extensionId: extensionAsset},
+      hostServices: testHostServices,
+    ).signApp(app.path, signingTime: signingTime);
+
+    final appexDir = p.join(app.path, 'PlugIns', 'Share.appex');
+    // The extension is independently provisioned, unlike a nested framework.
+    expect(
+      File(p.join(appexDir, 'embedded.mobileprovision')).readAsBytesSync(),
+      orderedEquals(extensionAsset.profileCmsBytes),
+    );
+    expect(
+      File(p.join(appexDir, '_CodeSignature', 'CodeResources')).existsSync(),
+      isTrue,
+    );
+    // The host app seals the extension into its own CodeResources.
+    final rootSeal = File(
+      p.join(app.path, '_CodeSignature', 'CodeResources'),
+    ).readAsStringSync();
+    expect(rootSeal, contains('PlugIns/Share.appex'));
+  });
+
+  for (final scenario in ['missing', 'incompatible', 'team']) {
+    test('$scenario extension material fails before any mutation', () async {
+      final app = _app(temporaryDirectory, scenario, 'dev.xcross.Runner');
+      _appExtension(app.path, 'Share', 'dev.xcross.Runner.Share');
+      final extension = p.join(app.path, 'PlugIns', 'Share.appex');
+      for (final bundle in [app.path, extension]) {
+        final signature = Directory(p.join(bundle, '_CodeSignature'))
+          ..createSync();
+        File(
+          p.join(signature.path, 'CodeResources'),
+        ).writeAsStringSync('old seal');
+        File(
+          p.join(bundle, 'embedded.mobileprovision'),
+        ).writeAsStringSync('old profile');
+      }
+      final before = <String, List<int>>{
+        for (final file in app.listSync(recursive: true).whereType<File>())
+          file.path: file.readAsBytesSync(),
+      };
+      final extensionAssets = switch (scenario) {
+        'missing' => <String, SigningAsset>{},
+        'incompatible' => {'dev.xcross.Runner.Share': exactAsset},
+        _ => {
+          'dev.xcross.Runner.Share': await _signingAsset(
+            temporaryDirectory,
+            'different-team',
+            'OTHERTEAM.dev.xcross.Runner.Share',
+            teamIdentifier: 'OTHERTEAM',
+          ),
+        },
+      };
+      final message = switch (scenario) {
+        'missing' => 'no provisioning profile',
+        'incompatible' => 'is incompatible with',
+        _ => 'different signing team',
+      };
+      final signer = BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+        extensionAssets: extensionAssets,
+      );
+      for (final operation in [
+        () => signer.preflight(app.path),
+        () => signer.signApp(app.path, signingTime: signingTime),
+      ]) {
+        await expectLater(
+          operation(),
+          throwsA(
+            isA<AppleError>().having(
+              (error) => error.message,
+              'message',
+              contains(message),
+            ),
+          ),
+        );
+        final after = <String, List<int>>{
+          for (final file in app.listSync(recursive: true).whereType<File>())
+            file.path: file.readAsBytesSync(),
+        };
+        expect(after.keys, unorderedEquals(before.keys));
+        for (final entry in before.entries) {
+          expect(
+            after[entry.key],
+            orderedEquals(entry.value),
+            reason: entry.key,
+          );
+        }
+      }
+    });
+  }
+
+  test('refuses a .appex outside PlugIns', () async {
+    final app = _app(temporaryDirectory, 'strayappex', 'dev.xcross.Runner');
+    final stray = Directory(p.join(app.path, 'Stray.appex'))..createSync();
+    _writeInfo(stray.path, 'Stray', 'dev.xcross.Runner.Stray');
+    File(p.join(stray.path, 'Stray')).writeAsBytesSync(_macho());
+
+    await expectLater(
+      BundleSigner(
+        exactAsset,
+        hostServices: testHostServices,
+      ).preflight(app.path),
+      throwsA(
+        isA<AppleError>().having(
+          (error) => error.message,
+          'message',
+          contains('PlugIns'),
+        ),
+      ),
+    );
+  });
+}
+
+Directory _app(Directory parent, String name, String identifier) {
+  final app = Directory(p.join(parent.path, '$name.app'))..createSync();
+  _writeInfo(app.path, 'Runner', identifier);
+  File(p.join(app.path, 'Runner')).writeAsBytesSync(_macho());
+  final frameworks = Directory(p.join(app.path, 'Frameworks'))..createSync();
+  _framework(frameworks.path, 'App', 'dev.xcross.App');
+  _framework(frameworks.path, 'Flutter', 'io.flutter.Flutter');
+  File(
+    p.join(frameworks.path, 'plugin.dylib'),
+  ).writeAsBytesSync(_macho(fileType: _mhDylib));
+  return app;
+}
+
+/// An embedded app extension at `<app>/PlugIns/<name>.appex`.
+void _appExtension(String app, String name, String identifier) {
+  final plugIns = Directory(p.join(app, 'PlugIns'));
+  plugIns.createSync();
+  final directory = Directory(p.join(plugIns.path, '$name.appex'))
+    ..createSync();
+  _writeInfo(directory.path, name, identifier);
+  File(p.join(directory.path, name)).writeAsBytesSync(_macho());
+}
+
+void _framework(String frameworks, String name, String identifier) {
+  final directory = Directory(p.join(frameworks, '$name.framework'))
+    ..createSync();
+  _writeInfo(directory.path, name, identifier);
+  File(
+    p.join(directory.path, name),
+  ).writeAsBytesSync(_macho(fileType: _mhDylib));
+  File(p.join(directory.path, 'asset.txt')).writeAsStringSync('$name asset');
+}
+
+void _writeInfo(String directory, String executable, String identifier) {
+  File(p.join(directory, 'Info.plist')).writeAsStringSync(
+    PropertyListSerialization.stringWithPropertyList({
+      'CFBundleExecutable': executable,
+      'CFBundleIdentifier': identifier,
+    }),
+  );
+}
+
+Map<Object?, Object?> _plist(List<int> bytes) {
+  final data = Uint8List.fromList(bytes);
+  return _map(
+    bytes.length >= 8 && ascii.decode(bytes.sublist(0, 8)) == 'bplist00'
+        ? PropertyListSerialization.propertyListWithData(
+            ByteData.sublistView(data),
+          )
+        : PropertyListSerialization.propertyListWithString(utf8.decode(data)),
+  );
+}
+
+Map<Object?, Object?> _map(Object? value) => value! as Map<Object?, Object?>;
+
+Uint8List _bytes(Object? value) {
+  final data = value! as ByteData;
+  return Uint8List.fromList(
+    data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+  );
+}
+
+Map<Object?, Object?> _entitlements(Uint8List bytes) {
+  final slots = _signatureSlots(bytes);
+  final blob = slots[5]!;
+  return _map(
+    PropertyListSerialization.propertyListWithString(
+      utf8.decode(blob.sublist(8)),
+    ),
+  );
+}
+
+Map<int, Uint8List> _signatureSlots(Uint8List bytes) {
+  var command = 32;
+  int? signatureOffset;
+  for (var index = 0; index < _u32le(bytes, 16); index++) {
+    if (_u32le(bytes, command) == 0x1d) {
+      signatureOffset = _u32le(bytes, command + 8);
+      break;
+    }
+    command += _u32le(bytes, command + 4);
+  }
+  if (signatureOffset == null) throw StateError('LC_CODE_SIGNATURE missing');
+  final count = _u32be(bytes, signatureOffset + 8);
+  final result = <int, Uint8List>{};
+  for (var index = 0; index < count; index++) {
+    final type = _u32be(bytes, signatureOffset + 12 + index * 8);
+    final offset =
+        signatureOffset + _u32be(bytes, signatureOffset + 16 + index * 8);
+    final length = _u32be(bytes, offset + 4);
+    result[type] = Uint8List.sublistView(bytes, offset, offset + length);
+  }
+  return result;
+}
+
+bool _link(String path, String target) {
+  try {
+    Link(path).createSync(target);
+    return true;
+  } on FileSystemException {
+    return false;
+  }
+}
+
+Uint8List _macho({int fileType = _mhExecute}) {
+  const sizeofcmds = 152 + 72;
+  const commandSlack = 16;
+  const linkeditOffset = 4096;
+  const commandsEnd = 32 + sizeofcmds;
+  const textOffset = commandsEnd + commandSlack;
+  final bytes = Uint8List(linkeditOffset);
+  _setU32le(bytes, 0, 0xfeedfacf);
+  _setU32le(bytes, 4, 0x0100000c);
+  _setU32le(bytes, 12, fileType);
+  _setU32le(bytes, 16, 2);
+  _setU32le(bytes, 20, sizeofcmds);
+
+  var command = 32;
+  _setU32le(bytes, command, 0x19);
+  _setU32le(bytes, command + 4, 152);
+  _name(bytes, command + 8, '__TEXT');
+  _setU64le(bytes, command + 32, linkeditOffset);
+  _setU64le(bytes, command + 48, linkeditOffset);
+  _setU32le(bytes, command + 56, 7);
+  _setU32le(bytes, command + 60, 5);
+  _setU32le(bytes, command + 64, 1);
+  final section = command + 72;
+  _name(bytes, section, '__text');
+  _name(bytes, section + 16, '__TEXT');
+  _setU64le(bytes, section + 32, textOffset);
+  _setU64le(bytes, section + 40, 16);
+  _setU32le(bytes, section + 48, textOffset);
+  _setU32le(bytes, section + 52, 2);
+  _setU32le(bytes, section + 64, 0x80000400);
+  for (var index = 0; index < 16; index++) {
+    bytes[textOffset + index] = index + 1;
+  }
+
+  command += 152;
+  _setU32le(bytes, command, 0x19);
+  _setU32le(bytes, command + 4, 72);
+  _name(bytes, command + 8, '__LINKEDIT');
+  _setU64le(bytes, command + 24, linkeditOffset);
+  _setU64le(bytes, command + 40, linkeditOffset);
+  _setU32le(bytes, command + 56, 7);
+  _setU32le(bytes, command + 60, 1);
+  return bytes;
+}
+
+Future<SigningAsset> _signingAsset(
+  Directory directory,
+  String name,
+  String applicationIdentifier, {
+  String teamIdentifier = 'TESTTEAM123',
+}) => createTestSigningAsset(
+  directory,
+  name,
+  applicationIdentifier,
+  hostServices: testHostServices,
+  teamIdentifier: teamIdentifier,
+);
+
+void _name(Uint8List bytes, int offset, String value) {
+  bytes.setRange(offset, offset + value.length, ascii.encode(value));
+}
+
+const _mhExecute = 2;
+const _mhDylib = 6;
+
+int _u32le(Uint8List bytes, int offset) =>
+    ByteData.sublistView(bytes).getUint32(offset, Endian.little);
+
+int _u32be(Uint8List bytes, int offset) =>
+    ByteData.sublistView(bytes).getUint32(offset);
+
+void _setU32le(Uint8List bytes, int offset, int value) =>
+    ByteData.sublistView(bytes).setUint32(offset, value, Endian.little);
+
+void _setU64le(Uint8List bytes, int offset, int value) =>
+    ByteData.sublistView(bytes).setUint64(offset, value, Endian.little);

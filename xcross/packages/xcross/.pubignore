@@ -1,0 +1,30 @@
+# Dev-only files; .pubignore replaces .gitignore for `dart pub publish`.
+.dart_tool/
+.fvm/
+.fvmrc
+.vscode/
+.idea/
+*.iml
+
+# Relative `include:` of the workspace root config — broken once published.
+analysis_options.yaml
+
+pubspec_overrides.yaml
+pubspec.lock
+
+test/
+tool/
+coverage/
+doc/api/
+
+# Build output only; lib/src/build/ and lib/src/compose/build/ are source.
+build/
+!lib/src/build/
+!**/lib/src/build/
+!lib/src/compose/build/
+!**/lib/src/compose/build/
+
+.DS_Store
+._*
+*~
+*.log

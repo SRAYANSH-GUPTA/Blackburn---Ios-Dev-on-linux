@@ -1,0 +1,37 @@
+# Shared strict analysis options from package:arxdeus_lints. Only xcross
+# specifics live here: excluded paths, formatter style, a few extra rules,
+# and the repo_analyzer architecture plugin.
+include: package:arxdeus_lints/analysis_options/recommended.yaml
+
+analyzer:
+  errors:
+    avoid_classes_with_only_static_members: ignore
+  exclude:
+    [
+      tools/**,
+      build/**,
+      examples/**,
+      android/**,
+      ios/**,
+      web/**,
+      windows/**,
+      macos/**,
+      linux/**,
+      "**/*.freezed.dart",
+      "**/*.g.dart",
+      "**/*.gr.dart",
+      "**/*.gen.dart",
+    ]
+
+plugins:
+  repo_analyzer:
+    path: tool/repo_analyzer
+
+formatter:
+  page_width: 80
+  trailing_commas: automate
+
+linter:
+  rules:
+    avoid_private_typedef_functions: true
+    unnecessary_await_in_return: true

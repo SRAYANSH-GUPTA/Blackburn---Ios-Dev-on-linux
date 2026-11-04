@@ -1,0 +1,801 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:apple_developer_kit/shared/appstoreconnect/appstoreconnect.dart';
+import 'package:apple_developer_kit/shared/appstoreconnect/asc_client.dart';
+import 'package:apple_developer_kit/shared/appstoreconnect/asc_models.dart';
+import 'package:apple_developer_kit/shared/errors/errors.dart';
+import 'package:meta/meta.dart';
+import 'package:path/path.dart' as p;
+import 'package:test/test.dart';
+
+import '../support/host_services.dart';
+import '../support/mapped_apple_fixture.dart';
+
+void main() {
+  test(
+    'mapped filesystem persists and reuses signing identity and profiles',
+    () async {
+      final fixture = MappedAppleFixture();
+      addTearDown(fixture.dispose);
+      final client = FakeProvisioningClient();
+      final provisioning = AscProvisioning(
+        hostServices: fixture.services,
+        client: client,
+      );
+      final identityDir = fixture.path('identity');
+      for (final bundle in ['com.example.one', 'com.example.two']) {
+        final result = await provisioning.provisionDevelopmentIdentity(
+          bundleId: bundle,
+          deviceUdids: ['UDID'],
+          outputDir: fixture.path('profiles/$bundle'),
+          identityDir: identityDir,
+        );
+        expect(result.certificatePemPath, '$identityDir/cert.pem');
+        expect(
+          fixture.fileSystem.file(result.certificatePemPath).readAsStringSync(),
+          contains('BEGIN CERTIFICATE'),
+        );
+        expect(
+          fixture.fileSystem.file(result.privateKeyPemPath).readAsStringSync(),
+          contains('PRIVATE KEY'),
+        );
+        expect(fixture.fileSystem.file(result.profilePath).readAsBytesSync(), [
+          4,
+          5,
+          6,
+        ]);
+        expect(File(result.profilePath).existsSync(), isFalse);
+      }
+      expect(client.certificateCreations, 1);
+      expect(fixture.permissions.hardened, isNotEmpty);
+      expect(Directory(identityDir).existsSync(), isFalse);
+    },
+  );
+
+  group('wrapDerAsPem', () {
+    test('wraps base64 DER content into a line-wrapped PEM block', () {
+      final der = base64.encode(List<int>.generate(200, (i) => i % 256));
+      final pem = AscProvisioning.wrapDerAsPem(der);
+
+      expect(pem, startsWith('-----BEGIN CERTIFICATE-----\n'));
+      expect(pem, endsWith('-----END CERTIFICATE-----\n'));
+
+      final lines = pem.trim().split('\n');
+      final bodyLines = lines.sublist(1, lines.length - 1);
+      for (final line in bodyLines.sublist(0, bodyLines.length - 1)) {
+        expect(line.length, 64);
+      }
+
+      // Round-trips back to the original DER bytes.
+      expect(base64.decode(bodyLines.join()), base64.decode(der));
+    });
+
+    test('supports a custom label', () {
+      final pem = AscProvisioning.wrapDerAsPem(
+        base64.encode([1, 2, 3]),
+        label: 'RSA PRIVATE KEY',
+      );
+      expect(pem, startsWith('-----BEGIN RSA PRIVATE KEY-----\n'));
+      expect(pem, contains('-----END RSA PRIVATE KEY-----'));
+    });
+  });
+
+  test(
+    'shares one certificate identity across bundle profile directories',
+    () async {
+      final temp = Directory.systemTemp.createTempSync('xcross_identity_cache');
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final client = FakeProvisioningClient();
+      final identityDir = p.join(temp.path, 'identity');
+
+      for (final bundleId in ['com.example.one', 'com.example.two']) {
+        final result =
+            await AscProvisioning(
+              hostServices: testHostServices,
+              client: client,
+            ).provisionDevelopmentIdentity(
+              bundleId: bundleId,
+              deviceUdids: const ['UDID'],
+              outputDir: p.join(temp.path, 'profiles', bundleId),
+              identityDir: identityDir,
+            );
+        expect(File(result.certificatePemPath).parent.path, identityDir);
+        expect(
+          File(result.profilePath).parent.path,
+          p.join(temp.path, 'profiles', bundleId),
+        );
+      }
+
+      expect(client.certificateCreations, 1);
+    },
+  );
+
+  test('registers a bundle ID with an alphanumeric display name', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_bundle_name');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient(bundleExists: false);
+
+    await AscProvisioning(
+      hostServices: testHostServices,
+      client: client,
+    ).provisionDevelopmentIdentity(
+      bundleId: 'com.example.my-app',
+      deviceUdids: const ['UDID'],
+      outputDir: temp.path,
+    );
+
+    expect(client.registeredBundleName, 'xcross com example my app');
+    expect(client.createdProfileName, matches(r'^xcross Development \d+$'));
+  });
+
+  test('registers and links App Groups when the app declares them', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_app_groups');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient();
+
+    await AscProvisioning(
+      hostServices: testHostServices,
+      client: client,
+    ).provisionDevelopmentIdentity(
+      bundleId: 'com.example.app',
+      deviceUdids: const ['UDID'],
+      outputDir: temp.path,
+      appGroups: const ['group.com.example.Shared'],
+    );
+
+    expect(client.registeredAppGroups, ['group.com.example.Shared']);
+    expect(client.assignedAppGroupIds, [
+      'group-resource-group.com.example.Shared',
+    ]);
+    expect(client.appGroupsBundleResourceId, isNotNull);
+  });
+
+  test('reuses an App Group that already exists on the team', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_app_groups_reuse');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient();
+    client.existingAppGroups['group.com.example.Shared'] = const AscAppGroup(
+      id: 'existing-id',
+      identifier: 'group.com.example.Shared',
+      name: 'xcross group com example Shared',
+    );
+
+    await AscProvisioning(
+      hostServices: testHostServices,
+      client: client,
+    ).provisionDevelopmentIdentity(
+      bundleId: 'com.example.app',
+      deviceUdids: const ['UDID'],
+      outputDir: temp.path,
+      appGroups: const ['group.com.example.Shared'],
+    );
+
+    expect(client.registeredAppGroups, isEmpty);
+    expect(client.assignedAppGroupIds, ['existing-id']);
+  });
+
+  test('never touches App Groups when the app declares none', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_no_app_groups');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient();
+
+    await AscProvisioning(
+      hostServices: testHostServices,
+      client: client,
+    ).provisionDevelopmentIdentity(
+      bundleId: 'com.example.app',
+      deviceUdids: const ['UDID'],
+      outputDir: temp.path,
+    );
+
+    expect(client.registeredAppGroups, isEmpty);
+    expect(client.assignedAppGroupIds, isNull);
+  });
+
+  test('still issues a profile when App Groups cannot be enabled', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_app_groups_fail');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient()
+      ..assignAppGroupsFailure = Exception('boom');
+    final warnings = <String>[];
+
+    // Enabling the capability can fail for reasons outside our control; that
+    // must degrade to a warning, not sink an otherwise working install.
+    final result =
+        await AscProvisioning(
+          hostServices: testHostServices,
+          client: client,
+        ).provisionDevelopmentIdentity(
+          bundleId: 'com.example.app',
+          deviceUdids: const ['UDID'],
+          outputDir: temp.path,
+          appGroups: const ['group.com.example.Shared'],
+          onProgress: warnings.add,
+        );
+
+    expect(File(result.profilePath).existsSync(), isTrue);
+    expect(warnings, anyElement(contains('App Groups')));
+  });
+
+  test('keeps installing when Apple rejects the credentials', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_app_groups_403');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    // A 401/403 means the session was refused rather than the API not
+    // supporting the operation. It must still never cost the user the build:
+    // only the shared container is lost.
+    final client = FakeProvisioningClient()
+      ..assignAppGroupsFailure = const AppleApiError(
+        403,
+        'Make sure a bearer token was provided, it is properly configured '
+        'and signed, and it has not expired.',
+      );
+    final warnings = <String>[];
+
+    final result =
+        await AscProvisioning(
+          hostServices: testHostServices,
+          client: client,
+        ).provisionDevelopmentIdentity(
+          bundleId: 'com.example.app',
+          deviceUdids: const ['UDID'],
+          outputDir: temp.path,
+          appGroups: const ['group.com.example.Shared'],
+          onProgress: warnings.add,
+        );
+
+    expect(File(result.profilePath).existsSync(), isTrue);
+    expect(warnings, anyElement(contains('Apple rejected these credentials')));
+  });
+
+  test('stays silent when the credentials simply cannot do it', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_app_groups_unsup');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    // An App Store Connect API key cannot attach an App Group. That is not
+    // worth a warning here: the caller inspects the issued profile and reports
+    // what was actually granted, which also covers a group attached by other
+    // means. Warning here too would say the same thing twice, and would be
+    // wrong whenever the profile does carry a group.
+    final client = FakeProvisioningClient()
+      ..findAppGroupFailure = const AppGroupsUnsupported();
+    final warnings = <String>[];
+
+    final result =
+        await AscProvisioning(
+          hostServices: testHostServices,
+          client: client,
+        ).provisionDevelopmentIdentity(
+          bundleId: 'com.example.app',
+          deviceUdids: const ['UDID'],
+          outputDir: temp.path,
+          appGroups: const ['group.com.example.Shared'],
+          onProgress: warnings.add,
+        );
+
+    expect(File(result.profilePath).existsSync(), isTrue);
+    expect(warnings, isEmpty);
+  });
+
+  test('installs anyway when an App Group lookup fails', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_app_groups_404');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    // A lookup failure used to escape and abort the whole install, because
+    // only the capability assignment was guarded, not the lookup.
+    final client = FakeProvisioningClient()
+      ..findAppGroupFailure = const AppleApiError(
+        404,
+        'The path provided does not match a defined resource type.',
+      );
+    final warnings = <String>[];
+
+    final result =
+        await AscProvisioning(
+          hostServices: testHostServices,
+          client: client,
+        ).provisionDevelopmentIdentity(
+          bundleId: 'com.example.app',
+          deviceUdids: const ['UDID'],
+          outputDir: temp.path,
+          appGroups: const ['group.com.example.Shared'],
+          onProgress: warnings.add,
+        );
+
+    expect(File(result.profilePath).existsSync(), isTrue);
+    expect(warnings, anyElement(contains('App Groups')));
+  });
+
+  test('survives a failure while registering a new App Group', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_app_groups_reg');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient()
+      ..registerAppGroupFailure = Exception('boom');
+    final warnings = <String>[];
+
+    final result =
+        await AscProvisioning(
+          hostServices: testHostServices,
+          client: client,
+        ).provisionDevelopmentIdentity(
+          bundleId: 'com.example.app',
+          deviceUdids: const ['UDID'],
+          outputDir: temp.path,
+          appGroups: const ['group.com.example.Shared'],
+          onProgress: warnings.add,
+        );
+
+    expect(File(result.profilePath).existsSync(), isTrue);
+    expect(warnings, anyElement(contains('App Groups')));
+  });
+
+  test('revokes team certificates and reissues on create 409', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_cert_409');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient(quotaUsedBy: const ['old-cert']);
+
+    final result =
+        await AscProvisioning(
+          hostServices: testHostServices,
+          client: client,
+        ).provisionDevelopmentIdentity(
+          bundleId: 'com.example.app',
+          deviceUdids: const ['UDID'],
+          outputDir: temp.path,
+        );
+
+    expect(client.revoked, ['old-cert']);
+    expect(client.certificateCreations, 2, reason: 'retried after revoking');
+    expect(File(result.certificatePemPath).existsSync(), isTrue);
+    expect(File(result.privateKeyPemPath).existsSync(), isTrue);
+  });
+
+  test('surfaces the 409 when there is nothing to revoke', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_cert_409_empty');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient(pendingRequest: true);
+
+    await expectLater(
+      AscProvisioning(
+        hostServices: testHostServices,
+        client: client,
+      ).provisionDevelopmentIdentity(
+        bundleId: 'com.example.app',
+        deviceUdids: const ['UDID'],
+        outputDir: temp.path,
+      ),
+      throwsA(isA<AppleApiError>()),
+    );
+    expect(client.revoked, isEmpty);
+    expect(client.certificateCreations, 1, reason: 'no pointless retry');
+  });
+
+  test('resolves profile certificate ids by serial like xtool', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_serial_resolve');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient(teamIdForSerial: 'team-side-id');
+
+    await AscProvisioning(
+      hostServices: testHostServices,
+      client: client,
+    ).provisionDevelopmentIdentity(
+      bundleId: 'com.example.app',
+      deviceUdids: const ['UDID'],
+      outputDir: temp.path,
+    );
+
+    expect(client.lastProfileCertificateIds, ['team-side-id']);
+  });
+
+  test('deletes the sole existing profile before creating a new one', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_profile_replace');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient(
+      existingProfiles: const [
+        AscProfileRef(id: 'old-profile', name: 'xcross Development 1'),
+      ],
+    );
+
+    await AscProvisioning(
+      hostServices: testHostServices,
+      client: client,
+    ).provisionDevelopmentIdentity(
+      bundleId: 'com.example.app',
+      deviceUdids: const ['UDID'],
+      outputDir: temp.path,
+    );
+
+    expect(client.deletedProfiles, ['old-profile']);
+  });
+
+  test(
+    'enables the capabilities an app needs, and only the missing ones',
+    () async {
+      final temp = Directory.systemTemp.createTempSync('xcross_capabilities');
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final client = FakeProvisioningClient()
+        ..enabledCapabilities.add('ASSOCIATED_DOMAINS');
+
+      await AscProvisioning(
+        hostServices: testHostServices,
+        client: client,
+      ).provisionDevelopmentIdentity(
+        bundleId: 'com.example.app',
+        deviceUdids: const ['UDID'],
+        outputDir: temp.path,
+        capabilities: const {
+          'APPLE_ID_AUTH',
+          'ASSOCIATED_DOMAINS',
+          'PUSH_NOTIFICATIONS',
+        },
+      );
+
+      // Sorted, and the one already on is not asked for again.
+      expect(client.enabledCapabilityRequests, [
+        'APPLE_ID_AUTH',
+        'PUSH_NOTIFICATIONS',
+      ]);
+    },
+  );
+
+  test(
+    'issues the profile anyway when the backend cannot do capabilities',
+    () async {
+      final temp = Directory.systemTemp.createTempSync(
+        'xcross_capabilities_no',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final client = FakeProvisioningClient(capabilitiesSupported: false);
+      final progress = <String>[];
+
+      final result =
+          await AscProvisioning(
+            hostServices: testHostServices,
+            client: client,
+          ).provisionDevelopmentIdentity(
+            bundleId: 'com.example.app',
+            deviceUdids: const ['UDID'],
+            outputDir: temp.path,
+            capabilities: const {'APPLE_ID_AUTH'},
+            onProgress: progress.add,
+          );
+
+      expect(File(result.profilePath).existsSync(), isTrue);
+      expect(progress.join('\n'), contains('capabilities'));
+    },
+  );
+
+  test('keeps a profile xcross did not create', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_profile_keep');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient(
+      existingProfiles: const [
+        AscProfileRef(
+          id: 'release-profile',
+          name: 'Example ios_app_store 1789297331',
+        ),
+      ],
+    );
+
+    await AscProvisioning(
+      hostServices: testHostServices,
+      client: client,
+    ).provisionDevelopmentIdentity(
+      bundleId: 'com.example.app',
+      deviceUdids: const ['UDID'],
+      outputDir: temp.path,
+    );
+
+    // Deleting it would take a release pipeline's profile with it: an App ID
+    // that ships already has one, and the old rule deleted a lone profile
+    // whatever it was called.
+    expect(client.deletedProfiles, isEmpty);
+  });
+
+  test('replaces a lone development profile another tool created', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_profile_dev');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient(
+      existingProfiles: const [
+        AscProfileRef(
+          id: 'xcode-profile',
+          name: 'iOS Team Provisioning Profile: com.example.app',
+          profileType: 'IOS_APP_DEVELOPMENT',
+        ),
+      ],
+    );
+
+    await AscProvisioning(
+      hostServices: testHostServices,
+      client: client,
+    ).provisionDevelopmentIdentity(
+      bundleId: 'com.example.app',
+      deviceUdids: const ['UDID'],
+      outputDir: temp.path,
+    );
+
+    expect(client.deletedProfiles, ['xcode-profile']);
+  });
+
+  // The profile xcross creates and the profile it is later willing to delete
+  // have to agree on the name, or it either deletes nothing (a free team's slot
+  // stays full) or deletes something it does not own.
+  test('creates profiles under the name it recognises as its own', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_profile_name');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient();
+
+    await AscProvisioning(
+      hostServices: testHostServices,
+      client: client,
+    ).provisionDevelopmentIdentity(
+      bundleId: 'com.example.app',
+      deviceUdids: const ['UDID'],
+      outputDir: temp.path,
+    );
+
+    expect(
+      client.createdProfileName,
+      startsWith(AscProvisioning.profileNamePrefix),
+    );
+  });
+
+  test('attaches every iOS device on the team to the profile', () async {
+    final temp = Directory.systemTemp.createTempSync('xcross_all_devices');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final client = FakeProvisioningClient(
+      extraDevices: const [
+        AscDevice(
+          id: 'ipad',
+          udid: 'IPAD-UDID',
+          name: 'iPad',
+          status: 'ENABLED',
+          deviceClass: 'IPAD',
+        ),
+        AscDevice(
+          id: 'mac',
+          udid: 'MAC-UDID',
+          name: 'Mac',
+          status: 'ENABLED',
+          deviceClass: 'MAC',
+        ),
+      ],
+    );
+
+    await AscProvisioning(
+      hostServices: testHostServices,
+      client: client,
+    ).provisionDevelopmentIdentity(
+      bundleId: 'com.example.app',
+      deviceUdids: const ['UDID'],
+      outputDir: temp.path,
+    );
+
+    expect(
+      client.lastProfileDeviceIds,
+      unorderedEquals(['device-UDID', 'ipad']),
+    );
+  });
+}
+
+@internal
+class FakeProvisioningClient implements DevelopmentProvisioningClient {
+  FakeProvisioningClient({
+    this.bundleExists = true,
+    this.quotaUsedBy = const [],
+    this.pendingRequest = false,
+    this.teamIdForSerial,
+    this.existingProfiles = const [],
+    this.capabilitiesSupported = true,
+    this.extraDevices = const [],
+  });
+
+  final bool bundleExists;
+  final List<String> quotaUsedBy;
+  final bool pendingRequest;
+  final String? teamIdForSerial;
+  final List<AscProfileRef> existingProfiles;
+
+  /// When false the fake behaves like the legacy Apple ID backend, which
+  /// cannot see or switch App ID capabilities.
+  final bool capabilitiesSupported;
+  final List<AscDevice> extraDevices;
+
+  final revoked = <String>[];
+  final deletedProfiles = <String>[];
+  final registeredAppGroups = <String>[];
+  final existingAppGroups = <String, AscAppGroup>{};
+  List<String>? assignedAppGroupIds;
+  String? appGroupsBundleResourceId;
+  Exception? assignAppGroupsFailure;
+  Exception? findAppGroupFailure;
+  Exception? registerAppGroupFailure;
+  final teamSerials = <String, String>{};
+  int certificateCreations = 0;
+  String? registeredBundleName;
+  String? createdProfileName;
+  List<String>? lastProfileCertificateIds;
+  List<String>? lastProfileDeviceIds;
+
+  @override
+  Future<AscAppGroup?> findAppGroup(String identifier) async {
+    final failure = findAppGroupFailure;
+    if (failure != null) throw failure;
+    return existingAppGroups[identifier];
+  }
+
+  @override
+  Future<AscAppGroup> registerAppGroup({
+    required String identifier,
+    required String name,
+  }) async {
+    final failure = registerAppGroupFailure;
+    if (failure != null) throw failure;
+    registeredAppGroups.add(identifier);
+    final group = AscAppGroup(
+      id: 'group-resource-$identifier',
+      identifier: identifier,
+      name: name,
+    );
+    existingAppGroups[identifier] = group;
+    return group;
+  }
+
+  @override
+  Future<void> assignAppGroups({
+    required String bundleIdResourceId,
+    required List<String> appGroupResourceIds,
+  }) async {
+    final failure = assignAppGroupsFailure;
+    if (failure != null) throw failure;
+    appGroupsBundleResourceId = bundleIdResourceId;
+    assignedAppGroupIds = appGroupResourceIds;
+  }
+
+  @override
+  Future<AscCertificate> createDevelopmentCertificate({
+    required String csrPem,
+  }) async {
+    certificateCreations++;
+    if (pendingRequest || quotaUsedBy.any((id) => !revoked.contains(id))) {
+      throw const AppleApiError(
+        409,
+        'You already have a current Development certificate or a pending '
+        'certificate request.',
+      );
+    }
+    final id = 'certificate-id-$certificateCreations';
+    final serial = 'SERIAL$certificateCreations';
+    teamSerials[serial] = teamIdForSerial ?? id;
+    return AscCertificate(
+      id: id,
+      certificateContentBase64: base64Encode([1, 2, 3]),
+      expirationDate: DateTime.now()
+          .toUtc()
+          .add(const Duration(days: 1))
+          .toIso8601String(),
+      serialNumber: serial,
+    );
+  }
+
+  @override
+  Future<AscBundleId?> findBundleId(String identifier) async => bundleExists
+      ? AscBundleId(
+          id: 'bundle-$identifier',
+          identifier: identifier,
+          name: identifier,
+        )
+      : null;
+
+  @override
+  Future<AscDevice?> findDeviceByUdid(String udid) async => AscDevice(
+    id: 'device-$udid',
+    udid: udid,
+    name: udid,
+    status: 'ENABLED',
+    deviceClass: 'IPHONE',
+  );
+
+  @override
+  Future<AscProfile> createProfile({
+    required String name,
+    required String bundleIdResourceId,
+    required List<String> certificateResourceIds,
+    required List<String> deviceResourceIds,
+  }) async {
+    lastProfileCertificateIds = List.of(certificateResourceIds);
+    lastProfileDeviceIds = List.of(deviceResourceIds);
+    createdProfileName = name;
+    return AscProfile(
+      id: 'profile-$bundleIdResourceId',
+      profileContentBase64: base64Encode([4, 5, 6]),
+      uuid: 'uuid',
+      profileState: 'ACTIVE',
+      expirationDate: null,
+    );
+  }
+
+  @override
+  Future<List<String>> listCertificateIds() async => [
+    for (final id in quotaUsedBy)
+      if (!revoked.contains(id)) id,
+  ];
+
+  @override
+  Future<List<String>> findCertificateIdsBySerial(String serialNumber) async {
+    final id = teamSerials[serialNumber];
+    if (id == null || revoked.contains(id)) return const [];
+    return [id];
+  }
+
+  @override
+  Future<void> revokeCertificate(String certificateId) async {
+    revoked.add(certificateId);
+    teamSerials.removeWhere((_, id) => id == certificateId);
+  }
+
+  @override
+  Future<List<AscDevice>> listDevices() async => [
+    const AscDevice(
+      id: 'device-UDID',
+      udid: 'UDID',
+      name: 'UDID',
+      status: 'ENABLED',
+      deviceClass: 'IPHONE',
+    ),
+    ...extraDevices,
+  ];
+
+  @override
+  Future<List<AscProfileRef>> listProfilesForBundle(
+    String bundleIdResourceId,
+  ) async => [
+    for (final profile in existingProfiles)
+      if (!deletedProfiles.contains(profile.id)) profile,
+  ];
+
+  /// Capability types switched on through this client, in request order.
+  final List<String> enabledCapabilityRequests = [];
+
+  final Set<String> enabledCapabilities = {};
+
+  @override
+  Future<Set<String>> listEnabledCapabilities(String bundleIdResourceId) async {
+    if (!capabilitiesSupported) throw const CapabilitiesUnsupported();
+    return {...enabledCapabilities};
+  }
+
+  @override
+  Future<void> enableCapability({
+    required String bundleIdResourceId,
+    required String capabilityType,
+  }) async {
+    if (!capabilitiesSupported) throw const CapabilitiesUnsupported();
+    enabledCapabilityRequests.add(capabilityType);
+    enabledCapabilities.add(capabilityType);
+  }
+
+  @override
+  Future<void> deleteProfile(String profileId) async =>
+      deletedProfiles.add(profileId);
+
+  @override
+  Future<AscBundleId> registerBundleId({
+    required String identifier,
+    required String name,
+  }) async {
+    registeredBundleName = name;
+    return AscBundleId(
+      id: 'bundle-$identifier',
+      identifier: identifier,
+      name: name,
+    );
+  }
+
+  @override
+  Future<AscDevice> registerDevice({
+    required String udid,
+    required String name,
+  }) => throw UnimplementedError();
+
+  @override
+  void close() {}
+}

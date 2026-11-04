@@ -1,0 +1,142 @@
+name: Setup Darwin SDK
+description: >-
+  Restore xcross-darwin.artifactbundle from the per-host Actions cache seeded
+  by the Warm Darwin SDK cache workflow.
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve xcross Swift SDK path
+      id: sdk-path
+      shell: python
+      run: |
+        import os
+        from pathlib import Path
+
+        if os.name == "nt":
+            config = Path(os.environ["APPDATA"])
+        else:
+            config = Path(
+                os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")
+            )
+        parent = config / "xcross" / "swift-sdks"
+        bundle = parent / "xcross-darwin.artifactbundle"
+        with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env:
+            env.write(f"XCROSS_SWIFT_SDKS_PATH={parent}\n")
+            env.write(f"XCROSS_DARWIN_BUNDLE={bundle}\n")
+        cache_key = "-".join(
+            (
+                "xcross-darwin",
+                os.environ["RUNNER_OS"].lower(),
+                os.environ["RUNNER_ARCH"].lower(),
+            )
+        )
+        with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+            out.write(f"bundle={bundle}\n")
+            out.write(f"cache-key={cache_key}\n")
+
+    - name: Restore Darwin SDK cache
+      id: darwin-cache
+      uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      with:
+        path: ${{ steps.sdk-path.outputs.bundle }}
+        key: ${{ steps.sdk-path.outputs.cache-key }}
+
+    - name: Require warmed Darwin SDK cache
+      if: steps.darwin-cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        CACHE_KEY: ${{ steps.sdk-path.outputs.cache-key }}
+      run: |
+        echo "::error::Darwin SDK cache $CACHE_KEY is missing. Run the \"Warm Darwin SDK cache\" workflow with xcode_xip_url set to an Xcode .xip download URL."
+        exit 1
+
+    - name: Refresh clang builtin headers
+      shell: python
+      run: |
+        import os
+        import shutil
+        import subprocess
+        from pathlib import Path
+
+        swift_path = shutil.which("swift")
+        if not swift_path:
+            raise SystemExit("selected Swift executable not found on PATH")
+        swift = Path(swift_path).resolve()
+        clang = swift.with_name("clang.exe" if os.name == "nt" else "clang")
+        if not clang.is_file():
+            raise SystemExit(
+                f"selected Swift executable {swift} has no sibling "
+                f"clang at {clang}"
+            )
+        resource = Path(
+            subprocess.check_output(
+                [str(clang), "-print-resource-dir"], text=True
+            ).strip()
+        )
+        source = resource / "include"
+        destination = Path(os.environ["XCROSS_DARWIN_BUNDLE"]).joinpath(
+            "Developer",
+            "Toolchains",
+            "XcodeDefault.xctoolchain",
+            "usr",
+            "lib",
+            "swift",
+            "clang",
+            "include",
+        )
+        if not source.is_dir():
+            raise SystemExit(f"clang builtin headers not found at {source}")
+        if destination.is_symlink() or destination.is_file():
+            destination.unlink()
+        elif destination.exists():
+            shutil.rmtree(destination)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source, destination)
+
+    - name: Materialize Swift compatibility resources
+      shell: python
+      run: |
+        import os
+        import shutil
+        from pathlib import Path
+
+        bundle = Path(os.environ["XCROSS_DARWIN_BUNDLE"])
+        source = bundle.joinpath(
+            "Developer", "Toolchains", "XcodeDefault.xctoolchain", "usr",
+            "lib", "swift", "iphoneos", "layouts-arm64.yaml"
+        )
+        if not source.is_file() or source.stat().st_size == 0:
+            raise SystemExit(
+                f"missing or empty canonical Swift layout: {source}"
+            )
+        destination = bundle.joinpath(
+            "Developer", "Runtimes", "XcodeDefault.xctoolchain", "usr",
+            "bin", "layouts-arm64.yaml"
+        )
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, destination)
+
+    - name: Verify Darwin Swift SDK
+      shell: python
+      run: |
+        import os
+        import shutil
+        import subprocess
+        from pathlib import Path
+
+        parent = Path(os.environ["XCROSS_SWIFT_SDKS_PATH"])
+        bundle = Path(os.environ["XCROSS_DARWIN_BUNDLE"])
+        for name in ("info.json", "swift-sdk.json"):
+            if not (bundle / name).is_file():
+                raise SystemExit(f"missing {bundle / name}")
+        command = ["swift", "sdk", "list", "--swift-sdks-path", str(parent)]
+        completed = subprocess.run(command, check=False)
+        if completed.returncode:
+            # A bare NTSTATUS here means swift.exe could not load its DLLs.
+            print(f"::error::{' '.join(command)} exited {completed.returncode}")
+            print(f"swift: {shutil.which('swift')}")
+            print("PATH:")
+            for entry in os.environ["PATH"].split(os.pathsep):
+                print(f"  {entry}")
+            raise SystemExit(completed.returncode)

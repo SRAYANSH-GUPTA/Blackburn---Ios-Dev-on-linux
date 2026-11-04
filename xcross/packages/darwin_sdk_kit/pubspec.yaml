@@ -1,0 +1,27 @@
+name: darwin_sdk_kit
+description: >-
+  Resolve and install Darwin/iOS SDK artifact bundles from Xcode.xip on
+  Linux and Windows, plus ld64.lld discovery.
+version: 1.0.0
+repository: https://github.com/arxdeus/xcross
+homepage: https://github.com/arxdeus/xcross
+topics:
+  - ios
+  - sdk
+  - xcode
+  - darwin
+
+environment:
+  sdk: ^3.10.0
+
+resolution: workspace
+
+dependencies:
+  archive: ^4.5.2
+  async: ^2.13.1
+  cli_kit: ^1.0.0
+  meta: ^1.19.0
+  path: ^1.9.1
+  xml: ^7.1.0
+dev_dependencies:
+  test: ^1.33.0

@@ -1,0 +1,3 @@
+[submodule "xcross/third_party/OpenAppleMacros"]
+	path = xcross/third_party/OpenAppleMacros
+	url = https://github.com/xtool-org/OpenAppleMacros

@@ -1,0 +1,185 @@
+import 'dart:io';
+
+import 'package:cli_kit/host/linux/linux_host.dart';
+import 'package:path/path.dart' as p;
+import 'package:test/test.dart';
+import 'package:xcross/src/shared/flutter/hot_reload/source_watcher.dart';
+
+import '../host_operations_fixtures.dart';
+
+void main() {
+  late Directory tmp;
+
+  setUp(() async {
+    tmp = await Directory.systemTemp.createTemp('xcross_source_watcher-');
+  });
+
+  tearDown(() => tmp.delete(recursive: true));
+
+  void writeFile(String relativePath, [String content = '// dummy\n']) {
+    final file = File(p.join(tmp.path, relativePath));
+    file.parent.createSync(recursive: true);
+    file.writeAsStringSync(content);
+  }
+
+  group('dartFiles', () {
+    test(
+      testOn: '!windows',
+      'scans lib/ recursively and prunes dot-directories and build/',
+      () {
+        writeFile(p.join('lib', 'a.dart'));
+        writeFile(p.join('lib', 'sub', 'b.dart'));
+        writeFile(p.join('lib', '.hidden', 'skip.dart'));
+        writeFile(p.join('lib', 'build', 'skip2.dart'));
+        writeFile('other.dart'); // outside lib/, must not be picked up
+
+        final watcher = SourceWatcher(
+          tmp.path,
+          fileSystem: LinuxHost().fileSystem,
+          paths: p.context,
+        );
+        final basenames = watcher.dartFiles().map(p.basename).toSet();
+
+        expect(basenames, {'a.dart', 'b.dart'});
+      },
+    );
+
+    test(testOn: '!windows', 'returns absolute paths', () {
+      writeFile(p.join('lib', 'a.dart'));
+      final watcher = SourceWatcher(
+        tmp.path,
+        fileSystem: LinuxHost().fileSystem,
+        paths: p.context,
+      );
+      final files = watcher.dartFiles();
+      expect(files, hasLength(1));
+      expect(p.isAbsolute(files.single), isTrue);
+    });
+
+    test(
+      testOn: '!windows',
+      'falls back to projectRoot itself when lib/ does not exist',
+      () {
+        writeFile('other.dart'); // no lib/ dir at all
+        final watcher = SourceWatcher(
+          tmp.path,
+          fileSystem: LinuxHost().fileSystem,
+          paths: p.context,
+        );
+        final basenames = watcher.dartFiles().map(p.basename).toSet();
+        expect(basenames, {'other.dart'});
+      },
+    );
+
+    test('returns logical paths through a mapped filesystem', () {
+      final fileSystem = FixtureMappedFileSystem(tmp);
+      fileSystem.file('/mapped-app/lib/sub/a.dart')
+        ..createSync(recursive: true)
+        ..writeAsStringSync('// a\n');
+      final watcher = SourceWatcher(
+        '/mapped-app',
+        fileSystem: fileSystem,
+        paths: p.Context(style: p.Style.posix),
+      );
+      expect(watcher.dartFiles(), ['/mapped-app/lib/sub/a.dart']);
+      watcher.snapshot();
+      fileSystem
+          .file('/mapped-app/lib/sub/a.dart')
+          .writeAsStringSync('// changed\n');
+      expect(watcher.changedFileUris(), ['file:///mapped-app/lib/sub/a.dart']);
+    });
+
+    test(
+      testOn: '!windows',
+      'returns an empty list when projectRoot does not exist',
+      () {
+        final missing = p.join(tmp.path, 'does_not_exist');
+        final watcher = SourceWatcher(
+          missing,
+          fileSystem: LinuxHost().fileSystem,
+          paths: p.context,
+        );
+        expect(watcher.dartFiles(), isEmpty);
+      },
+    );
+  });
+
+  group('snapshot / changedFileUris', () {
+    test(
+      testOn: '!windows',
+      'reports nothing changed right after a snapshot',
+      () {
+        writeFile(p.join('lib', 'a.dart'));
+        final watcher = SourceWatcher(
+          tmp.path,
+          fileSystem: LinuxHost().fileSystem,
+          paths: p.context,
+        );
+        watcher.snapshot();
+        expect(watcher.changedFileUris(), isEmpty);
+      },
+    );
+
+    // Regression check for the documented "not pure" contract: the first
+    // call must report the edit, and — because it also advances the
+    // baseline — an immediate second call with no further edits must not.
+    test(
+      testOn: '!windows',
+      'reports an edited file once, then advances the baseline',
+      () {
+        writeFile(p.join('lib', 'a.dart'));
+        final watcher = SourceWatcher(
+          tmp.path,
+          fileSystem: LinuxHost().fileSystem,
+          paths: p.context,
+        );
+        final aPath = watcher.dartFiles().single;
+        watcher.snapshot();
+
+        File(aPath).writeAsStringSync('// changed\n');
+
+        expect(watcher.changedFileUris(), [Uri.file(aPath).toString()]);
+        expect(watcher.changedFileUris(), isEmpty);
+      },
+    );
+
+    test(testOn: '!windows', 'only reports the file that actually changed', () {
+      writeFile(p.join('lib', 'a.dart'), '// a\n');
+      writeFile(p.join('lib', 'b.dart'), '// b\n');
+      final watcher = SourceWatcher(
+        tmp.path,
+        fileSystem: LinuxHost().fileSystem,
+        paths: p.context,
+      );
+      watcher.snapshot();
+
+      final bPath = watcher.dartFiles().firstWhere(
+        (f) => p.basename(f) == 'b.dart',
+      );
+      File(bPath).writeAsStringSync('// b changed\n');
+
+      expect(watcher.changedFileUris(), [Uri.file(bPath).toString()]);
+    });
+
+    test(
+      testOn: '!windows',
+      'a file created after the snapshot counts as changed',
+      () {
+        writeFile(p.join('lib', 'a.dart'));
+        final watcher = SourceWatcher(
+          tmp.path,
+          fileSystem: LinuxHost().fileSystem,
+          paths: p.context,
+        );
+        watcher.snapshot();
+
+        writeFile(p.join('lib', 'new_file.dart'));
+        final newPath = watcher.dartFiles().firstWhere(
+          (f) => p.basename(f) == 'new_file.dart',
+        );
+
+        expect(watcher.changedFileUris(), [Uri.file(newPath).toString()]);
+      },
+    );
+  });
+}
