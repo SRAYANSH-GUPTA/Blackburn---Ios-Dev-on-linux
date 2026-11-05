@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Source checkout launcher; rebuild only when Go inputs change.
+set -euo pipefail
+root=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/.." && pwd)
+cache=${XDG_CACHE_HOME:-$HOME/.cache}/blackburn
+mkdir -p "$cache"
+exec 9>"$cache/build.lock"
+flock 9
+binary="$cache/blackburn-$(printf '%s' "$root" | sha256sum | cut -c1-16)"
+if [[ ! -x "$binary" ]] || [[ -n $(find "$root/cmd/blackburn" "$root/internal" "$root/go.mod" "$root/go.sum" -type f -newer "$binary" -print -quit 2>/dev/null) ]]; then
+  (cd "$root" && go build -o "$binary.tmp" ./cmd/blackburn)
+  mv -- "$binary.tmp" "$binary"
+fi
+flock -u 9
+exec 9>&-
+export BLACKBURN_ROOT="$root"
+exec "$binary" "$@"

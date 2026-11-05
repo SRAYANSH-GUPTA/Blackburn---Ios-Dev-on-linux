@@ -1,2 +1,5 @@
 # Local Flutter projects and their generated build output for shared-workspace runs.
 /workspace/
+
+# Optional standalone CLI build.
+/bin/blackburn-cli
