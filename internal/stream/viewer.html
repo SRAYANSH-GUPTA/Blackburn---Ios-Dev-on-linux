@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blackburn Simulator</title>
+<style>
+:root{color-scheme:dark;background:#172536;color:#e4ecf3;font:15px system-ui,sans-serif}body{margin:0;display:flex;flex-direction:column;height:100dvh}header{padding:12px 20px;display:flex;gap:24px;align-items:center;background:#203449}h1{font-size:17px;margin:0;font-weight:600}#status{color:#b7cadb;flex:1}button,input{font:inherit;color:inherit;background:#203449;border:1px solid #829db4;padding:7px 12px}button{cursor:pointer}canvas{display:block;max-width:100%;max-height:100%;object-fit:contain;touch-action:none;outline-offset:3px}canvas:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #78c9ef}main{min-height:0;flex:1;display:flex;justify-content:center;align-items:center;padding:12px;overflow:hidden}form{display:flex;gap:8px;padding:12px 20px}input{flex:1;min-width:0}#error{margin:0 20px;color:#ffb4ad;min-height:1.5em}@media(max-width:500px){header{flex-wrap:wrap;gap:8px}#status{flex-basis:100%}}
+</style>
+<header><h1>Blackburn Simulator</h1><span id="status" role="status">Connecting…</span><button id="home">Home</button></header>
+<main><canvas tabindex="0" aria-label="Simulator screen. Click or drag to interact; type to enter text."></canvas></main>
+<p id="error" role="alert"></p><form><input aria-label="Text to enter in simulator" placeholder="Type into focused simulator field" autocomplete="off"><button>Send text</button></form>
+<script>
+const canvas=document.querySelector('canvas'),draw=canvas.getContext('2d'),status=document.querySelector('#status'),error=document.querySelector('#error');
+let ws,frame,controller=false,start=null,generation=0;
+function send(input){if(!controller){error.textContent='This viewer has no control. Reconnect after the controller disconnects.';return}if(ws?.readyState!==1||!frame)return;ws.send(JSON.stringify({type:'input',input:{...input,epoch:frame.epoch}}))}
+function connect(){const current=++generation;ws=new WebSocket(`ws://${location.host}/ws?token=VIDEO_TOKEN&control=CONTROL_TOKEN`);const socket=ws;
+socket.onmessage=async e=>{const msg=JSON.parse(e.data);if(msg.type==='hello'){controller=msg.controller;status.textContent=controller?'Connected':'View only'}
+if(msg.type==='input'&&!msg.ok)error.textContent=msg.error;
+if(msg.type==='frame'){try{const f=msg.frame;const bytes=Uint8Array.from(atob(f.png),c=>c.charCodeAt(0));const bitmap=await createImageBitmap(new Blob([bytes],{type:'image/png'}));if(current!==generation){bitmap.close();return}canvas.width=f.width;canvas.height=f.height;draw.drawImage(bitmap,0,0);bitmap.close();frame=f;if(f.warning)error.textContent="Using screenshot fallback: "+f.warning;status.textContent=controller?'Connected':'View only';socket.send(JSON.stringify({type:'ack'}))}catch(err){error.textContent='Could not display simulator frame';socket.close()}}};
+socket.onclose=()=>{if(current!==generation)return;frame=null;start=null;controller=false;status.textContent='Disconnected. Reconnecting…';setTimeout(connect,1000)};}
+setInterval(()=>{if(ws?.readyState===1)ws.send(JSON.stringify({type:'ping'}))},10000);
+function point(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top,view_width:r.width,view_height:r.height}}
+canvas.onpointerdown=e=>{if(!frame||start)return;canvas.focus();canvas.setPointerCapture(e.pointerId);start={...point(e),id:e.pointerId,epoch:frame.epoch}};
+canvas.onpointerup=e=>{if(!start||start.id!==e.pointerId)return;const end=point(e),first=start;start=null;if(!frame||first.epoch!==frame.epoch)return;if(Math.hypot(end.x-first.x,end.y-first.y)<4)send({type:'touch',...end});else send({type:'drag',...first,end_x:end.x,end_y:end.y})};
+canvas.onpointercancel=()=>start=null;
+canvas.onkeydown=e=>{if(e.metaKey||e.ctrlKey||e.altKey)return;if(e.key.length===1||['Enter','Backspace','Tab','Home'].includes(e.key)){e.preventDefault();send({type:'key',key:e.key})}};
+document.querySelector('#home').onclick=()=>send({type:'key',key:'home'});
+document.querySelector('form').onsubmit=e=>{e.preventDefault();const input=e.target.querySelector('input');if(input.value)send({type:'text',text:input.value})};connect();
+</script></html>
