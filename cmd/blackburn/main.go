@@ -6,7 +6,8 @@ import (
 	"path/filepath"
 )
 
-// All verbs, including transactional viewer changes, share the CLI operation lock.
+// Lifecycle and mutation verbs share the operation lock. The simulator streamer
+// observes its device lease without holding that lock while clients are attached.
 func main() {
 	root := os.Getenv("BLACKBURN_ROOT")
 	if root == "" {

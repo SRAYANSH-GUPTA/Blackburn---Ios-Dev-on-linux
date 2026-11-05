@@ -200,7 +200,7 @@ func parse(name string, args []string, setup func(*flag.FlagSet)) (*flag.FlagSet
 }
 func (a *App) dispatch(args []string) error {
 	if len(args) == 0 || args[0] == "help" || args[0] == "--help" || args[0] == "-h" {
-		fmt.Fprintln(a.Out, "Usage: blackburn view list|get|set VIEWER [--allow-restart]|detach\n       blackburn mode [list|get|set PRESET]\n       blackburn up [--mode=PRESET]\n       blackburn down [--timeout=120s]\n       blackburn status [--json]\n       blackburn doctor [--mode=PRESET] [--json]\n       blackburn sim <up|shot|install|run|status|down> [arguments]\n       blackburn config <get KEY|set KEY VALUE|show|validate>\nPresets: headless (agent), stream, studio (local), hybrid (remote), direct")
+		fmt.Fprintln(a.Out, "Usage: blackburn view list|get|set VIEWER [--allow-restart]|detach\n       blackburn mode [list|get|set PRESET]\n       blackburn up [--mode=PRESET]\n       blackburn down [--timeout=120s]\n       blackburn status [--json]\n       blackburn doctor [--mode=PRESET] [--json]\n       blackburn sim <up|shot|install|run|status|down|stream|touch|tap|key|text> [arguments]\n       blackburn config <get KEY|set KEY VALUE|show|validate>\nPresets: headless (agent), stream, studio (local), hybrid (remote), direct")
 		return nil
 	}
 	env, legacyErr := LegacyEnv(a.Env)
@@ -267,6 +267,18 @@ func (a *App) dispatch(args []string) error {
 	}
 	if cmd != "up" && cmd != "down" && cmd != "sim" {
 		return fail("INVALID_ARGUMENT", "unknown command "+cmd, 2)
+	}
+	// Streaming observes the lease without holding the operation lock for its
+	// lifetime, allowing touch/text and explicit lifecycle commands to proceed.
+	if cmd == "sim" && len(args) > 0 && args[0] == "stream" {
+		s, err := a.session()
+		if err != nil {
+			return err
+		}
+		if s.Mode == "" {
+			s = Session{Mode: m, Profile: p, Endpoint: ep}
+		}
+		return a.sim(&s, args)
 	}
 	unlock, e := a.lock()
 	if e != nil {

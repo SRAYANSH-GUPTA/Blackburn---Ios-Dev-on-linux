@@ -14,6 +14,11 @@ import (
 
 func quote(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'" }
 func (a *App) macsim(s *Session, args ...string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), a.Timeout)
+	defer cancel()
+	return a.macsimContext(ctx, s, args...)
+}
+func (a *App) macsimContext(ctx context.Context, s *Session, args ...string) (string, error) {
 	state := a.env("MAC_SIM_STATE_DIR", filepath.Join(config.Base("XDG_STATE_HOME", ".local/state"), "macbox/mac-sim"))
 	if s.Endpoint.Provider == "remote-mac" {
 		state = filepath.Join(a.StateDir, "sim", s.Profile.Endpoint)
@@ -25,11 +30,15 @@ func (a *App) macsim(s *Session, args ...string) (string, error) {
 	if s.Device != "" {
 		env = append(env, "MAC_SIM_DEVICE="+s.Device)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), a.Timeout)
-	defer cancel()
 	return a.Run(ctx, append([]string{filepath.Join(a.Root, "macbox/sims/bin/mac-sim")}, args...), env)
 }
 func (a *App) sim(s *Session, args []string) error {
+	if len(args) > 0 {
+		switch args[0] {
+		case "stream", "touch", "tap", "key", "text":
+			return a.simInteractive(s, args)
+		}
+	}
 	if len(args) == 0 {
 		return fail("INVALID_ARGUMENT", "usage: sim up|shot PATH|install APP|run BUNDLE|status|down", 2)
 	}
