@@ -1,0 +1,10 @@
+Running build hooks...Running `/usr/bin/cc -I /home/srayansh/Documents/Golang/Blackburn/xcross/packages/apple_developer_kit/src/host/linux/adi/ -shared -fPIC -O2 -o /home/srayansh/Documents/Golang/Blackburn/xcross/.dart_tool/hooks_runner/shared/apple_developer_kit/build/6b4ebf10e7/libsysv_abi_bridge.so /home/srayansh/Documents/Golang/Blackburn/xcross/packages/apple_developer_kit/src/host/shared/adi/posix_bridge.c`.
+
+Running build hooks... Extracting Darwin SDK                 28,411 entries
+Patching clang builtin headers…
+Patching clang builtin headers        0.2s
+Copying Swift compatibility resources…
+Copying Swift compatibility resources 0.0s
+Writing Swift SDK metadata…
+Writing Swift SDK metadata            0.0s
+ Installed Darwin Swift SDK (28,411 entries) at /home/srayansh/.config/xcross/swift-sdks/xcross-darwin.artifactbundle

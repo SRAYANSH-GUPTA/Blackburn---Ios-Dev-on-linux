@@ -1,0 +1,45 @@
+/home/srayansh/Documents/company repos/sdc-si/BYTEPAD_Flutter_2027/build/xcross-ios-simulator/x86_64/xcross-flutter-debug/App.framework/App: Mach-O 64-bit x86_64 dynamically linked shared library, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|NO_REEXPORTED_DYLIBS|APP_EXTENSION_SAFE>
+
+File: /home/srayansh/Documents/company repos/sdc-si/BYTEPAD_Flutter_2027/build/xcross-ios-simulator/x86_64/xcross-flutter-debug/App.framework/App
+Format: Mach-O 64-bit x86-64
+Arch: x86_64
+AddressSize: 64bit
+MachHeader {
+  Magic: Magic64 (0xFEEDFACF)
+  CpuType: X86-64 (0x1000007)
+  CpuSubType: CPU_SUBTYPE_X86_64_ALL (0x3)
+  FileType: DynamicLibrary (0x6)
+  NumOfLoadCommands: 14
+  SizeOfLoadCommands: 640
+  Flags [ (0x2100085)
+    MH_APP_EXTENSION_SAFE (0x2000000)
+    MH_DYLDLINK (0x4)
+    MH_NOUNDEFS (0x1)
+    MH_NO_REEXPORTED_DYLIBS (0x100000)
+    MH_TWOLEVEL (0x80)
+  ]
+  Reserved: 0x0
+}
+/home/srayansh/Documents/company repos/sdc-si/BYTEPAD_Flutter_2027/build/xcross-ios-simulator/x86_64/xcross-native-assets/App.framework/App: Mach-O 64-bit x86_64 dynamically linked shared library, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|NO_REEXPORTED_DYLIBS|APP_EXTENSION_SAFE>
+
+File: /home/srayansh/Documents/company repos/sdc-si/BYTEPAD_Flutter_2027/build/xcross-ios-simulator/x86_64/xcross-native-assets/App.framework/App
+Format: Mach-O 64-bit x86-64
+Arch: x86_64
+AddressSize: 64bit
+MachHeader {
+  Magic: Magic64 (0xFEEDFACF)
+  CpuType: X86-64 (0x1000007)
+  CpuSubType: CPU_SUBTYPE_X86_64_ALL (0x3)
+  FileType: DynamicLibrary (0x6)
+  NumOfLoadCommands: 14
+  SizeOfLoadCommands: 640
+  Flags [ (0x2100085)
+    MH_APP_EXTENSION_SAFE (0x2000000)
+    MH_DYLDLINK (0x4)
+    MH_NOUNDEFS (0x1)
+    MH_NO_REEXPORTED_DYLIBS (0x100000)
+    MH_TWOLEVEL (0x80)
+  ]
+  Reserved: 0x0
+}
+/home/srayansh/Documents/company repos/sdc-si/BYTEPAD_Flutter_2027/build/xcross-ios-simulator created 2026-11-04 22:34:25.719114146 +0530

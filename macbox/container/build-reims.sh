@@ -16,6 +16,8 @@ set -euo pipefail
 : "${MACBOX_HOME:?}" "${MACBOX_REPO:?}"
 export CARGO_BUILD_JOBS="${MACBOX_BUILD_JOBS:-4}"
 export CMAKE_BUILD_PARALLEL_LEVEL="$CARGO_BUILD_JOBS"
+export MAKEFLAGS="-j$CARGO_BUILD_JOBS"
+export NINJAFLAGS="-j$CARGO_BUILD_JOBS"
 . "$MACBOX_REPO/versions.env"
 UPSTREAM=0 SWITCH=1
 for a in "$@"; do
@@ -69,8 +71,8 @@ else
   say "Reims vGPU ${REIMS_REF:0:7} + patches/reims-vgpu"
   checkout "$R" "$REIMS_REPO" "$REIMS_REF"
   apply "$R" "$MACBOX_REPO/patches/reims-vgpu"
-  git -C "$R" submodule update -q --init vendor/qemu
-  git -C "$R/vendor/qemu" fetch -q origin "$QEMU_REF" 2>/dev/null || true
+  git -C "$R" submodule update -q --init --depth 1 vendor/qemu
+  git -C "$R/vendor/qemu" fetch -q --depth 1 origin "$QEMU_REF" 2>/dev/null || true
   git -C "$R/vendor/qemu" checkout -q -f --detach "$QEMU_REF"
   SUFFIX=-macbox
 fi

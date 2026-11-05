@@ -1,0 +1,5 @@
+/home/srayansh/.config/swiftpm/swift-sdks/darwin.artifactbundle/Xcode.app/Contents/Info.plist: exists=True, symlink=False
+/home/srayansh/.config/swiftpm/swift-sdks/darwin.artifactbundle/Xcode.app/Contents/Developer/usr/bin/xcodebuild: exists=True, symlink=False
+/home/srayansh/.config/swiftpm/swift-sdks/darwin.artifactbundle/Xcode.app/Contents/Developer/usr/bin/actool: exists=True, symlink=False
+/home/srayansh/.config/swiftpm/swift-sdks/darwin.artifactbundle/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs: exists=True, symlink=False
+/home/srayansh/.config/swiftpm/swift-sdks/darwin.artifactbundle/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc: exists=True, symlink=True

@@ -1,0 +1,247 @@
+{"app_name":"simctl","timestamp":"2026-11-05 23:46:13.00 +0530","app_version":"1051.55","slice_uuid":"0fdec159-f559-3aa3-81b3-729ed0448a76","build_version":"1051.55","platform":1,"share_with_app_devs":0,"is_first_party":1,"bug_type":"309","os_version":"macOS 26.7.2 (25G332)","roots_installed":0,"incident_id":"374E2E8D-5C68-4B1F-B924-84B707F46A93","name":"simctl"}
+{
+  "uptime" : 680,
+  "procRole" : "Unspecified",
+  "version" : 2,
+  "userID" : 501,
+  "deployVersion" : 210,
+  "modelCode" : "iMac20,1",
+  "coalitionID" : 1015,
+  "osVersion" : {
+    "train" : "macOS 26.7.2",
+    "build" : "25G332",
+    "releaseType" : "User"
+  },
+  "captureTime" : "2026-11-05 23:38:05.7166 +0530",
+  "codeSigningMonitor" : 0,
+  "incident" : "374E2E8D-5C68-4B1F-B924-84B707F46A93",
+  "pid" : 1524,
+  "cpuType" : "X86-64",
+  "procLaunch" : "2026-11-05 23:38:04.2807 +0530",
+  "procStartAbsTime" : 681495414520,
+  "procExitAbsTime" : 682907411822,
+  "procName" : "simctl",
+  "procPath" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/Resources\/bin\/simctl",
+  "bundleInfo" : {"CFBundleVersion":"1051.55","CFBundleShortVersionString":"1051.55"},
+  "parentProc" : "zsh",
+  "parentPid" : 1523,
+  "coalitionName" : "com.openssh.sshd.255F9734-A92D-4466-8CFD-AE1E125E0AB5",
+  "crashReporterKey" : "3821D9ED-4DB6-EBE4-460A-C4A5D91ED0F9",
+  "appleIntelligenceStatus" : {"state":"unavailable","reasons":["deviceNotCapable"]},
+  "developerMode" : 1,
+  "responsiblePid" : 1519,
+  "responsibleProc" : "sshd-session",
+  "codeSigningID" : "com.apple.CoreSimulator.simctl",
+  "codeSigningTeamID" : "",
+  "codeSigningFlags" : 570522369,
+  "codeSigningValidationCategory" : 1,
+  "codeSigningTrustLevel" : 4294967295,
+  "codeSigningAuxiliaryInfo" : 288230376151711744,
+  "bootSessionUUID" : "2F670044-96E7-4282-93F2-F2282E17E955",
+  "sip" : "enabled",
+  "vmRegionInfo" : "0x10fb03e96 is in 0x10faf9000-0x10fb50000;  bytes after start: 44694  bytes before end: 311657\n      REGION TYPE                    START - END         [ VSIZE] PRT\/MAX SHRMOD  REGION DETAIL\n      __LINKEDIT                  10f9a5000-10fa01000    [  368K] r--\/rw- SM=COW  \/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/CoreSimulator\n      GAP OF 0xf8000 BYTES\n--->  __TEXT                      10faf9000-10fb50000    [  348K] r-x\/rwx SM=COW  \/System\/Library\/Extensions\/AppleParavirtGPUMetalIOGPUFamily.bundle\/Contents\/MacOS\/AppleParavirtGPUMetalIOGPUFamily\n      __DATA_CONST                10fb50000-10fb51000    [    4K] r--\/rw- SM=COW  \/System\/Library\/Extensions\/AppleParavirtGPUMetalIOGPUFamily.bundle\/Contents\/MacOS\/AppleParavirtGPUMetalIOGPUFamily",
+  "exception" : {"codes":"0x000000000000000a, 0x000000010fb03e96","rawCodes":[10,4558175894],"type":"EXC_BAD_ACCESS","signal":"SIGBUS","subtype":"KERN_MEMORY_ERROR at 0x000000010fb03e96"},
+  "termination" : {"flags":0,"code":10,"namespace":"SIGNAL","indicator":"Bus error: 10","byProc":"exc handler","byPid":1524},
+  "ktriageinfo" : "APFS - (arg = 0x1e1005e00300001) Encountered a compressed data hash mismatch\nVM - (arg = 0x0) Page has restart bit set\nAPFS - (arg = 0x1e1005e00300001) Encountered a compressed data hash mismatch\nAPFS - (arg = 0x3a47005e00300001) Pagein of compressed inode failed\nVM - (arg = 0x190000005e) Filesystem pagein returned an error in vnode_pagein\n",
+  "vmregioninfo" : "0x10fb03e96 is in 0x10faf9000-0x10fb50000;  bytes after start: 44694  bytes before end: 311657\n      REGION TYPE                    START - END         [ VSIZE] PRT\/MAX SHRMOD  REGION DETAIL\n      __LINKEDIT                  10f9a5000-10fa01000    [  368K] r--\/rw- SM=COW  \/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/CoreSimulator\n      GAP OF 0xf8000 BYTES\n--->  __TEXT                      10faf9000-10fb50000    [  348K] r-x\/rwx SM=COW  \/System\/Library\/Extensions\/AppleParavirtGPUMetalIOGPUFamily.bundle\/Contents\/MacOS\/AppleParavirtGPUMetalIOGPUFamily\n      __DATA_CONST                10fb50000-10fb51000    [    4K] r--\/rw- SM=COW  \/System\/Library\/Extensions\/AppleParavirtGPUMetalIOGPUFamily.bundle\/Contents\/MacOS\/AppleParavirtGPUMetalIOGPUFamily",
+  "extMods" : {"caller":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"system":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"targeted":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"warnings":0},
+  "faultingThread" : 1,
+  "threads" : [{"id":16662,"threadState":{"r13":{"value":21592279046},"rax":{"value":268451845},"rflags":{"value":518},"cpu":{"value":0},"r14":{"value":2},"rsi":{"value":21592279046},"r8":{"value":2270685456},"cr2":{"value":0},"rdx":{"value":8589934592},"r10":{"value":18704582574080},"r9":{"value":18704582574080},"r15":{"value":2270685456},"rbx":{"value":140701798789264},"trap":{"value":133},"err":{"value":16777263},"r11":{"value":518},"rip":{"value":140703206026062},"rbp":{"value":140701798789104},"rsp":{"value":140701798789000},"r12":{"value":18704582574080},"rcx":{"value":140701798789000},"flavor":"x86_THREAD_STATE","rdi":{"value":140701798789264}},"queue":"com.apple.main-thread","frames":[{"imageOffset":2894,"symbol":"mach_msg2_trap","symbolLocation":10,"imageIndex":8},{"imageOffset":61271,"symbol":"mach_msg2_internal","symbolLocation":83,"imageIndex":8},{"imageOffset":31590,"symbol":"mach_msg_overwrite","symbolLocation":586,"imageIndex":8},{"imageOffset":3670,"symbol":"mach_msg","symbolLocation":19,"imageIndex":8},{"imageOffset":509631,"symbol":"__CFRunLoopServiceMachPort","symbolLocation":145,"imageIndex":9},{"imageOffset":504152,"symbol":"__CFRunLoopRun","symbolLocation":1354,"imageIndex":9},{"imageOffset":1323879,"symbol":"_CFRunLoopRunSpecificWithOptions","symbolLocation":496,"imageIndex":9},{"imageOffset":372215,"symbol":"-[NSRunLoop(NSRunLoop) runMode:beforeDate:]","symbolLocation":216,"imageIndex":10},{"imageOffset":900415,"symbol":"-[NSRunLoop(NSRunLoop) run]","symbolLocation":76,"imageIndex":10},{"imageOffset":242913,"imageIndex":0},{"imageOffset":78296,"symbol":"start","symbolLocation":3240,"imageIndex":11}]},{"triggered":true,"id":16663,"threadState":{"r13":{"value":140703201689728,"symbolLocation":0,"symbol":"objc_msgSend"},"rax":{"value":105553177954736},"rflags":{"value":66054},"cpu":{"value":2},"r14":{"value":140703201689728,"symbolLocation":0,"symbol":"objc_msgSend"},"rsi":{"value":140703739284114,"objc-selector":"init"},"r8":{"value":2},"cr2":{"value":4558175894},"rdx":{"value":140703739321494,"objc-selector":".cxx_construct"},"r10":{"value":4558559538,"symbolLocation":2,"symbol":"OBJC_CLASS_$_AppleParavirtObjectRefAllocator"},"r9":{"value":3588280557},"r15":{"value":105553140779312},"rbx":{"value":140402506137088},"trap":{"value":14,"description":"(no mapping for user instruction read)"},"err":{"value":20},"r11":{"value":4558175894},"rip":{"value":4558175894,"matchesCrashFrame":1},"rbp":{"value":123145325304864},"rsp":{"value":123145325304792},"r12":{"value":105553143038432},"rcx":{"value":2},"flavor":"x86_THREAD_STATE","rdi":{"value":105553177954736}},"queue":"com.Metal.DeviceDispatch","frames":[{"imageOffset":44694,"imageIndex":7},{"imageOffset":129765,"imageIndex":7},{"imageOffset":1938923,"symbol":"-[MTLIOAccelService initWithAcceleratorPort:deviceClass:]","symbolLocation":534,"imageIndex":13},{"imageOffset":1937447,"symbol":"-[MTLIOAccelServiceGlobalContext registerService:deviceClass:]","symbolLocation":161,"imageIndex":13},{"imageOffset":96434,"symbol":"_dispatch_client_callout","symbolLocation":6,"imageIndex":14},{"imageOffset":58856,"symbol":"_dispatch_lane_barrier_sync_invoke_and_complete","symbolLocation":60,"imageIndex":14},{"imageOffset":1937674,"symbol":"-[MTLIOAccelServiceGlobalContext processPendingCreateIOAccelServiceRequests]","symbolLocation":189,"imageIndex":13},{"imageOffset":1939658,"symbol":"MTLRegisterDevices","symbolLocation":125,"imageIndex":13},{"imageOffset":5698,"symbol":"MTLCopyAllDevices","symbolLocation":16,"imageIndex":13},{"imageOffset":61471,"symbol":"__currentHostSupportsMetal_block_invoke","symbolLocation":34,"imageIndex":1},{"imageOffset":96434,"symbol":"_dispatch_client_callout","symbolLocation":6,"imageIndex":14},{"imageOffset":14026,"symbol":"_dispatch_once_callout","symbolLocation":20,"imageIndex":14},{"imageOffset":61434,"symbol":"currentHostSupportsMetal","symbolLocation":27,"imageIndex":1},{"imageOffset":592359,"symbol":"-[SimRuntime initWithBundle:error:]","symbolLocation":5231,"imageIndex":3},{"imageOffset":189424,"symbol":"-[SimServiceContext _loadProfilesAtPath:bundleSuffix:classForBundle:skippingLoadedProfiles:shouldRescan:]","symbolLocation":981,"imageIndex":3},{"imageOffset":168709,"symbol":"-[SimServiceContext _loadRuntimeProfilesAtPath:skippingLoadedRuntimes:shouldRescan:]","symbolLocation":116,"imageIndex":3},{"imageOffset":177461,"symbol":"-[SimServiceContext _onQueue_addProfilesForVolumeURL:]","symbolLocation":1394,"imageIndex":3},{"imageOffset":149080,"symbol":"__63-[SimServiceContext initWithDeveloperDir:connectionType:error:]_block_invoke","symbolLocation":1163,"imageIndex":3},{"imageOffset":96434,"symbol":"_dispatch_client_callout","symbolLocation":6,"imageIndex":14},{"imageOffset":58856,"symbol":"_dispatch_lane_barrier_sync_invoke_and_complete","symbolLocation":60,"imageIndex":14},{"imageOffset":147178,"symbol":"-[SimServiceContext initWithDeveloperDir:connectionType:error:]","symbolLocation":1470,"imageIndex":3},{"imageOffset":145389,"symbol":"__63+[SimServiceContext sharedServiceContextForDeveloperDir:error:]_block_invoke","symbolLocation":185,"imageIndex":3},{"imageOffset":144045,"symbol":"+[SimServiceContext _withSharedServiceContexts:]","symbolLocation":60,"imageIndex":3},{"imageOffset":144815,"symbol":"+[SimServiceContext sharedServiceContextForDeveloperDir:error:]","symbolLocation":222,"imageIndex":3},{"imageOffset":109647,"imageIndex":0},{"imageOffset":110694,"imageIndex":0},{"imageOffset":244080,"imageIndex":0},{"imageOffset":5654,"symbol":"_dispatch_call_block_and_release","symbolLocation":12,"imageIndex":14},{"imageOffset":96434,"symbol":"_dispatch_client_callout","symbolLocation":6,"imageIndex":14},{"imageOffset":207947,"symbol":"_dispatch_root_queue_drain.cold.4","symbolLocation":749,"imageIndex":14},{"imageOffset":67646,"symbol":"_dispatch_root_queue_drain","symbolLocation":84,"imageIndex":14},{"imageOffset":68834,"symbol":"_dispatch_worker_thread2","symbolLocation":179,"imageIndex":14},{"imageOffset":10206,"symbol":"_pthread_wqthread","symbolLocation":233,"imageIndex":15},{"imageOffset":6171,"symbol":"start_wqthread","symbolLocation":15,"imageIndex":15}]},{"id":16666,"frames":[],"threadState":{"r13":{"value":0},"rax":{"value":33554800},"rflags":{"value":512},"cpu":{"value":0},"r14":{"value":1},"rsi":{"value":8195},"r8":{"value":409604},"cr2":{"value":0},"rdx":{"value":123145325322240},"r10":{"value":0},"r9":{"value":18446744073709551615},"r15":{"value":123145325845368},"rbx":{"value":123145325846528},"trap":{"value":133},"err":{"value":33554800},"r11":{"value":582},"rip":{"value":140703206287372},"rbp":{"value":0},"rsp":{"value":123145325846528},"r12":{"value":5193732},"rcx":{"value":0},"flavor":"x86_THREAD_STATE","rdi":{"value":123145325846528}}},{"id":16667,"frames":[],"threadState":{"r13":{"value":0},"rax":{"value":33554800},"rflags":{"value":512},"cpu":{"value":0},"r14":{"value":1},"rsi":{"value":8963},"r8":{"value":409604},"cr2":{"value":0},"rdx":{"value":123145325858816},"r10":{"value":0},"r9":{"value":18446744073709551615},"r15":{"value":123145326381952},"rbx":{"value":123145326383104},"trap":{"value":133},"err":{"value":33554800},"r11":{"value":582},"rip":{"value":140703206287372},"rbp":{"value":0},"rsp":{"value":123145326383104},"r12":{"value":1982472},"rcx":{"value":0},"flavor":"x86_THREAD_STATE","rdi":{"value":123145326383104}}},{"id":16674,"frames":[],"threadState":{"r13":{"value":0},"rax":{"value":33554800},"rflags":{"value":512},"cpu":{"value":0},"r14":{"value":0},"rsi":{"value":11531},"r8":{"value":409604},"cr2":{"value":0},"rdx":{"value":123145326395392},"r10":{"value":0},"r9":{"value":18446744073709551615},"r15":{"value":0},"rbx":{"value":123145326919680},"trap":{"value":133},"err":{"value":33554800},"r11":{"value":582},"rip":{"value":140703206287372},"rbp":{"value":0},"rsp":{"value":123145326919680},"r12":{"value":0},"rcx":{"value":0},"flavor":"x86_THREAD_STATE","rdi":{"value":123145326919680}}}],
+  "usedImages" : [
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4549996544,
+    "size" : 532480,
+    "uuid" : "0fdec159-f559-3aa3-81b3-729ed0448a76",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/Resources\/bin\/simctl",
+    "name" : "simctl"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4552003584,
+    "CFBundleShortVersionString" : "1051.55",
+    "CFBundleIdentifier" : "com.apple.CoreSimulator.CoreSimulatorUtilities",
+    "size" : 335872,
+    "uuid" : "23ebaff4-91a4-33cc-9048-ea3be1dd0611",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/Frameworks\/CoreSimulatorUtilities.framework\/Versions\/A\/CoreSimulatorUtilities",
+    "name" : "CoreSimulatorUtilities",
+    "CFBundleVersion" : "1051.55"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4551380992,
+    "CFBundleShortVersionString" : "16.0",
+    "CFBundleIdentifier" : "com.apple.CoreSimulator.SimPasteboardPlus",
+    "size" : 176128,
+    "uuid" : "3c10a30a-d203-36be-9a96-bbb5633ccda8",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/Frameworks\/SimPasteboardPlus.framework\/Versions\/A\/SimPasteboardPlus",
+    "name" : "SimPasteboardPlus",
+    "CFBundleVersion" : "1051.55"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4555632640,
+    "CFBundleShortVersionString" : "1051.55",
+    "CFBundleIdentifier" : "com.apple.CoreSimulator",
+    "size" : 950272,
+    "uuid" : "ecc53c9b-93b0-326a-97f2-b8f1f0b3a132",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/CoreSimulator",
+    "name" : "CoreSimulator",
+    "CFBundleVersion" : "1051.55"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4550733824,
+    "CFBundleShortVersionString" : "46",
+    "CFBundleIdentifier" : "com.apple.ROCKit",
+    "size" : 286720,
+    "uuid" : "562afae0-4805-3689-8b68-71c384edd03d",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/ROCKit.framework\/Versions\/A\/ROCKit",
+    "name" : "ROCKit",
+    "CFBundleVersion" : "46"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4552609792,
+    "CFBundleShortVersionString" : "17.0",
+    "CFBundleIdentifier" : "com.apple.dt.DVTDownloads",
+    "size" : 745472,
+    "uuid" : "053bd37e-2f78-325c-b49f-c434f6c8ffd4",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/DVTDownloads.framework\/Versions\/A\/DVTDownloads",
+    "name" : "DVTDownloads",
+    "CFBundleVersion" : "24431"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4551692288,
+    "CFBundleShortVersionString" : "1051.55",
+    "CFBundleIdentifier" : "com.apple.CoreSimulator.CoreSimDeviceIO",
+    "size" : 61440,
+    "uuid" : "88dc69a1-0c75-39e3-8224-b0d5143786b5",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/Frameworks\/CoreSimDeviceIO.framework\/Versions\/A\/CoreSimDeviceIO",
+    "name" : "CoreSimDeviceIO",
+    "CFBundleVersion" : "1051.55"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4558131200,
+    "CFBundleShortVersionString" : "64.5",
+    "CFBundleIdentifier" : "com.apple.driver.AppleParavirtGPUMetalIOGPUFamily",
+    "size" : 356352,
+    "uuid" : "8d0f62bc-5e03-34de-9456-b92178eb336e",
+    "path" : "\/System\/Library\/Extensions\/AppleParavirtGPUMetalIOGPUFamily.bundle\/Contents\/MacOS\/AppleParavirtGPUMetalIOGPUFamily",
+    "name" : "AppleParavirtGPUMetalIOGPUFamily",
+    "CFBundleVersion" : "64.5"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 140703206023168,
+    "size" : 255440,
+    "uuid" : "a6d8c216-4f74-3793-bd68-0156d505de47",
+    "path" : "\/usr\/lib\/system\/libsystem_kernel.dylib",
+    "name" : "libsystem_kernel.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64h",
+    "base" : 140703206563840,
+    "CFBundleShortVersionString" : "6.9",
+    "CFBundleIdentifier" : "com.apple.CoreFoundation",
+    "size" : 4971013,
+    "uuid" : "b7f5aeea-bdbd-3bbd-a1d1-baf62215be44",
+    "path" : "\/System\/Library\/Frameworks\/CoreFoundation.framework\/Versions\/A\/CoreFoundation",
+    "name" : "CoreFoundation",
+    "CFBundleVersion" : "5026.6.7.5"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 140703226032128,
+    "CFBundleShortVersionString" : "6.9",
+    "CFBundleIdentifier" : "com.apple.Foundation",
+    "size" : 17035107,
+    "uuid" : "047f640d-8c2b-3201-aabf-659efeca5c64",
+    "path" : "\/System\/Library\/Frameworks\/Foundation.framework\/Versions\/C\/Foundation",
+    "name" : "Foundation",
+    "CFBundleVersion" : "5026.6.7.5"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 140703202140160,
+    "size" : 706640,
+    "uuid" : "22cc4f6a-197f-37c2-bbfd-3b5e8229e756",
+    "path" : "\/usr\/lib\/dyld",
+    "name" : "dyld"
+  },
+  {
+    "size" : 0,
+    "source" : "A",
+    "base" : 0,
+    "uuid" : "00000000-0000-0000-0000-000000000000"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 140703413813248,
+    "CFBundleShortVersionString" : "373.7.1",
+    "CFBundleIdentifier" : "com.apple.Metal",
+    "size" : 3060410,
+    "uuid" : "6f93bbf4-f2ea-3f4b-904d-1e907faf705a",
+    "path" : "\/System\/Library\/Frameworks\/Metal.framework\/Versions\/A\/Metal",
+    "name" : "Metal",
+    "CFBundleVersion" : "373.7.1"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 140703204491264,
+    "size" : 294290,
+    "uuid" : "9418808d-59a5-39ef-be7a-361b04adb17e",
+    "path" : "\/usr\/lib\/system\/libdispatch.dylib",
+    "name" : "libdispatch.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 140703206281216,
+    "size" : 48832,
+    "uuid" : "091a35d0-ecf6-3370-bf9b-860e41cd07e2",
+    "path" : "\/usr\/lib\/system\/libsystem_pthread.dylib",
+    "name" : "libsystem_pthread.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64h",
+    "base" : 140703201665024,
+    "size" : 279436,
+    "uuid" : "3d3e4632-64dd-3015-a0a8-ccd98d931065",
+    "path" : "\/usr\/lib\/libobjc.A.dylib",
+    "name" : "libobjc.A.dylib"
+  }
+],
+  "sharedCache" : {
+  "base" : 140703157485568,
+  "size" : 30064771072,
+  "uuid" : "21fb8708-fc8e-3765-be8c-65d612cdf049"
+},
+  "vmSummary" : "ReadOnly portion of Libraries: Total=965.8M resident=0K(0%) swapped_out_or_unallocated=965.8M(100%)\nWritable regions: Total=666.6M written=0K(0%) resident=0K(0%) swapped_out=0K(0%) unallocated=666.6M(100%)\n\n                                VIRTUAL   REGION \nREGION TYPE                        SIZE    COUNT (non-coalesced) \n===========                     =======  ======= \nActivity Tracing                   256K        1 \nKernel Alloc Once                    8K        1 \nMALLOC                           656.2M       41 \nMALLOC guard page                   16K        4 \nSTACK GUARD                       56.0M        5 \nStack                             10.0M        5 \nVM_ALLOCATE                          4K        1 \n__CTF                               824        1 \n__DATA                            25.4M      555 \n__DATA_CONST                      78.0M      596 \n__DATA_DIRTY                      3694K      488 \n__FONT_DATA                        2352        1 \n__LINKEDIT                       155.9M       10 \n__OBJC_RO                         65.2M        1 \n__OBJC_RW                         2598K        1 \n__TEXT                           809.9M      611 \n__TPRO_CONST                         16        2 \nmapped file                       33.9M        2 \nshared memory                      620K        9 \n===========                     =======  ======= \nTOTAL                              1.9G     2335 \n",
+  "legacyInfo" : {
+  "threadTriggered" : {
+    "queue" : "com.Metal.DeviceDispatch"
+  }
+},
+  "logWritingSignature" : "abb0b20c1cdd6fdc080ef5ad8c80681d1a649cc6",
+  "roots_installed" : 0,
+  "bug_type" : "309",
+  "trmStatus" : 2105856
+}

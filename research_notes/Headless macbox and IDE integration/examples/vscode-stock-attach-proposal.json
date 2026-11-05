@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Blackburn: attach existing VM (stock Dart)",
+      "type": "dart",
+      "request": "attach",
+      "debuggerType": "dart",
+      "cwd": "${workspaceFolder}",
+      "vmServiceUri": "${input:blackburnVmUri}"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "blackburnVmUri",
+      "type": "promptString",
+      "description": "Paste the complete tunneled VM URI, including its authentication path"
+    }
+  ]
+}

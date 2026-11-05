@@ -1,0 +1,8 @@
+{
+  "excluded_generated_directories": [
+    "build",
+    ".git",
+    ".dart_tool"
+  ],
+  "changed_original_files": []
+}

@@ -1,0 +1,17 @@
+$ flutter --version
+Command exited with code 1: fetch --tags
+Standard error: error: Could not read 639bbcaa81119ca8c95c9bff4790d2c85eb8e052
+fatal: bad object refs/remotes/origin/investigation/issue-102924
+error: https://github.com/flutter/flutter.git did not send all necessary objects
+error: refs/remotes/origin/investigation/issue-102924 does not point to a valid object!
+error: refs/remotes/origin/investigation/issue-108400 does not point to a valid object!
+error: refs/remotes/origin/investigation/issue-113885 does not point to a valid object!
+error: refs/remotes/origin/investigation/issue-130811 does not point to a valid object!
+error: refs/remotes/origin/investigation/issue-99153 does not point to a valid object!
+
+Flutter 3.47.7 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision abaf9c5237 (4 weeks ago) • 2026-10-08 09:51:21 -0700
+Engine • hash d8a2d6c768c334d53e16277f837970ffa1e2de81 (revision deb287481e) (28 days ago) • 2026-10-07 17:09:12.000Z
+Tools • Dart 3.13.5 • DevTools 2.60.0
+
+[exit 0]

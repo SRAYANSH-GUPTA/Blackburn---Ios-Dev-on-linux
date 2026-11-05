@@ -1,0 +1,17 @@
+host
+  ok    x86-64
+  ok    CPU virtualization (VT-x/AMD-V)
+  ok    AVX2
+  ok    /dev/kvm
+  ok    GPU /dev/dri/renderD128: Intel
+  ok    vm.max_map_count 1048576
+  WARN  RAM 15 GB: 16 GB or more is better
+  WARN  125 GB free in /home/srayansh/.local/share/macbox: macOS, Xcode and the build need about 150 (an SSD or NVMe helps a lot)
+  ok    docker (29.9.2)
+macbox
+  ok    config /home/srayansh/.config/macbox/blackburn.env
+  ok    ssh key
+  WARN  image not built: macbox build
+  WARN  Reims not built: macbox build
+  WARN  no VM yet: macbox create
+  WARN  VM not running

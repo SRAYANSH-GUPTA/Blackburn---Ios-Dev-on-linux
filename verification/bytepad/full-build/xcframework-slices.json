@@ -1,0 +1,68 @@
+[
+  {
+    "path": "/home/srayansh/.cache/xcross/swiftpm/binary-artifacts-simulator-x86_64-v1/targets/948d9257f53f01cbed74b81bb8adc8758e52ac9390751772de7889026d32d5a1/PDFium/PDFium.xcframework/Info.plist",
+    "libraries": [
+      {
+        "BinaryPath": "PDFium.framework/PDFium",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "PDFium.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      }
+    ]
+  },
+  {
+    "path": "/home/srayansh/.cache/xcross/flutter-engine/deb287481e3ce9468f3434937ced4240a70539ca/artifacts/engine/ios/Flutter.xcframework/Info.plist",
+    "libraries": [
+      {
+        "BinaryPath": "Flutter.framework/Flutter",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "Flutter.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      },
+      {
+        "BinaryPath": "Flutter.framework/Flutter",
+        "LibraryIdentifier": "ios-arm64",
+        "LibraryPath": "Flutter.framework",
+        "SupportedArchitectures": [
+          "arm64"
+        ],
+        "SupportedPlatform": "ios"
+      }
+    ]
+  },
+  {
+    "path": "/home/srayansh/.cache/xcross/flutter-engine/deb287481e3ce9468f3434937ced4240a70539ca/artifacts/engine/ios/extension_safe/Flutter.xcframework/Info.plist",
+    "libraries": [
+      {
+        "BinaryPath": "Flutter.framework/Flutter",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "Flutter.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      },
+      {
+        "BinaryPath": "Flutter.framework/Flutter",
+        "LibraryIdentifier": "ios-arm64",
+        "LibraryPath": "Flutter.framework",
+        "SupportedArchitectures": [
+          "arm64"
+        ],
+        "SupportedPlatform": "ios"
+      }
+    ]
+  }
+]

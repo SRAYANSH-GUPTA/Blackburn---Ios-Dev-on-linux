@@ -1,0 +1,6 @@
+{
+  "dart.flutterSdkPath": "/opt/flutter",
+  "dart.customFlutterDapPath": ".vscode/xcross_dap.dart",
+  "dart.customDartDapPath": ".vscode/xcross_dap.dart",
+  "dart.hotReloadOnSave": "never"
+}

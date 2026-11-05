@@ -8,6 +8,23 @@ export XCROSS_SIMULATOR_ARCH="${XCROSS_SIMULATOR_ARCH:-x86_64}"
 export XCROSS_SIMULATOR_HOST="${XCROSS_SIMULATOR_HOST:-$MACBOX_SSH_HOST}"
 MACBOX="$ROOT/macbox/macbox"
 fail() { printf '%s\n' "$*" >&2; exit 1; }
+check_setup_space() {
+  local storage free_kb
+  storage=${MACBOX_HOME:-}
+  if [[ -z "$storage" ]]; then
+    storage=$(
+      if [[ -f "$MACBOX_CONFIG" ]]; then source "$MACBOX_CONFIG"; fi
+      printf '%s' "${MACBOX_HOME:-$HOME/.local/share/macbox}"
+    )
+  fi
+  # Check the filesystem that will actually hold the VM.
+  while [[ ! -d "$storage" ]]; do storage=$(dirname -- "$storage"); done
+  free_kb=$(df -Pk "$storage" | awk 'NR==2 {print $4}')
+  if ((free_kb < BLACKBURN_MIN_FREE_GIB*1024*1024)); then
+    printf 'MISSING: at least %s GiB free for macbox setup; %s KiB available on %s\n' "$BLACKBURN_MIN_FREE_GIB" "$free_kb" "$storage" >&2
+    return 1
+  fi
+}
 xcross() { dart run "$ROOT/xcross/packages/xcross/bin/xcross.dart" "$@"; }
 usage() {
   cat <<'EOF'
@@ -33,12 +50,16 @@ case "$cmd" in
     check docker info
     if command -v vulkaninfo >/dev/null; then check vulkaninfo --summary; else printf 'MISSING: vulkaninfo\n'; bad=1; fi
     free_kb=$(df -Pk "$ROOT" | awk 'NR==2 {print $4}')
-    if ((free_kb < 100*1024*1024)); then printf 'MISSING: at least 100 GiB free for VM/builds\n'; bad=1; fi
+    check check_setup_space
     check xcross --help
+    # CLI startup alone does not validate the installed SDK or Swift identity.
+    check xcross flutter doctor
     printf 'Guest RAM: %s; GPU: %s; free disk: %s KiB\n' "$MACBOX_MEMORY" "$MACBOX_RENDER_NODE" "$free_kb"
     exit "$bad" ;;
   setup-macbox)
     # This command changes only macbox's user files/containers, never host packages/groups/sysctl.
+    # Refuse before building images or fetching recovery media on a full disk.
+    check_setup_space || fail 'Free disk space before running setup-macbox.'
     "$MACBOX" init
     "$MACBOX" doctor
     "$MACBOX" build

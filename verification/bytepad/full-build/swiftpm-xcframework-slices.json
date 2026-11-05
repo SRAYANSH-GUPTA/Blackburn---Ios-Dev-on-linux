@@ -1,0 +1,146 @@
+[
+  {
+    "path": "/home/srayansh/.cache/xcross/swiftpm/27116523b5e9e612-simulator-x86_64/scratch/artifacts/abseil-cpp-binary/absl/absl.xcframework/Info.plist",
+    "simulator_libraries": [
+      {
+        "BinaryPath": "absl.framework/absl",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "absl.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      }
+    ]
+  },
+  {
+    "path": "/home/srayansh/.cache/xcross/swiftpm/27116523b5e9e612-simulator-x86_64/scratch/artifacts/googleappmeasurement/GoogleAppMeasurementIdentitySupport/GoogleAppMeasurementIdentitySupport.xcframework/Info.plist",
+    "simulator_libraries": [
+      {
+        "BinaryPath": "GoogleAppMeasurementIdentitySupport.framework/GoogleAppMeasurementIdentitySupport",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "GoogleAppMeasurementIdentitySupport.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      }
+    ]
+  },
+  {
+    "path": "/home/srayansh/.cache/xcross/swiftpm/27116523b5e9e612-simulator-x86_64/scratch/artifacts/googleappmeasurement/GoogleAppMeasurement/GoogleAppMeasurement.xcframework/Info.plist",
+    "simulator_libraries": [
+      {
+        "BinaryPath": "GoogleAppMeasurement.framework/GoogleAppMeasurement",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "GoogleAppMeasurement.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      }
+    ]
+  },
+  {
+    "path": "/home/srayansh/.cache/xcross/swiftpm/27116523b5e9e612-simulator-x86_64/scratch/artifacts/firebase-ios-sdk/FirebaseAnalytics/FirebaseAnalytics.xcframework/Info.plist",
+    "simulator_libraries": [
+      {
+        "BinaryPath": "FirebaseAnalytics.framework/FirebaseAnalytics",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "FirebaseAnalytics.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      }
+    ]
+  },
+  {
+    "path": "/home/srayansh/.cache/xcross/swiftpm/27116523b5e9e612-simulator-x86_64/scratch/artifacts/firebase-ios-sdk/FirebaseFirestoreInternal/FirebaseFirestoreInternal.xcframework/Info.plist",
+    "simulator_libraries": [
+      {
+        "BinaryPath": "FirebaseFirestoreInternal.framework/FirebaseFirestoreInternal",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "FirebaseFirestoreInternal.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      }
+    ]
+  },
+  {
+    "path": "/home/srayansh/.cache/xcross/swiftpm/27116523b5e9e612-simulator-x86_64/scratch/artifacts/grpc-binary/grpcpp/grpcpp.xcframework/Info.plist",
+    "simulator_libraries": [
+      {
+        "BinaryPath": "grpcpp.framework/grpcpp",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "grpcpp.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      }
+    ]
+  },
+  {
+    "path": "/home/srayansh/.cache/xcross/swiftpm/27116523b5e9e612-simulator-x86_64/scratch/artifacts/grpc-binary/grpc/grpc.xcframework/Info.plist",
+    "simulator_libraries": [
+      {
+        "BinaryPath": "grpc.framework/grpc",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "grpc.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      }
+    ]
+  },
+  {
+    "path": "/home/srayansh/.cache/xcross/swiftpm/27116523b5e9e612-simulator-x86_64/scratch/artifacts/grpc-binary/openssl_grpc/openssl_grpc.xcframework/Info.plist",
+    "simulator_libraries": [
+      {
+        "BinaryPath": "openssl_grpc.framework/openssl_grpc",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "openssl_grpc.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      }
+    ]
+  },
+  {
+    "path": "/home/srayansh/.cache/xcross/swiftpm/27116523b5e9e612-simulator-x86_64/scratch/artifacts/google-ads-on-device-conversion-ios-sdk/GoogleAdsOnDeviceConversion/GoogleAdsOnDeviceConversion.xcframework/Info.plist",
+    "simulator_libraries": [
+      {
+        "BinaryPath": "GoogleAdsOnDeviceConversion.framework/GoogleAdsOnDeviceConversion",
+        "LibraryIdentifier": "ios-arm64_x86_64-simulator",
+        "LibraryPath": "GoogleAdsOnDeviceConversion.framework",
+        "SupportedArchitectures": [
+          "arm64",
+          "x86_64"
+        ],
+        "SupportedPlatform": "ios",
+        "SupportedPlatformVariant": "simulator"
+      }
+    ]
+  }
+]

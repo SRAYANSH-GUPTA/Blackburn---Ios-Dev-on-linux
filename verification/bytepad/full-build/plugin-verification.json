@@ -1,0 +1,14 @@
+{
+  "ConnectivityPlusPlugin": true,
+  "FLTFirebaseCorePlugin": true,
+  "FLTFirebaseCrashlyticsPlugin": true,
+  "FlutterSecureStorageDarwinPlugin": true,
+  "FPPPackageInfoPlusPlugin": true,
+  "PDFiumFlutterPlugin": true,
+  "FPPSharePlusPlugin": true,
+  "SharedPreferencesPlugin": true,
+  "SqflitePlugin": true,
+  "URLLauncherPlugin": true,
+  "VideoPlayerPlugin": true,
+  "WakelockPlusPlugin": true
+}

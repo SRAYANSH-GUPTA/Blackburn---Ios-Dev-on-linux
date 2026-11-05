@@ -1,0 +1,4 @@
+1557:reims-vgpu WARN reims_vgpu_core::resources::manager::lookup: render pipeline lookup failed: Metal refused a render pipeline: compile failed: InvalidInput(InputError { kind: Abi(UnknownKey), at: Metadata { entry: None, arg: None, key: Some("llvm.module.flags") } })
+1558:reims-vgpu WARN reims_vgpu_core::gpu_task::exec: task 7: exec faulted: render pipeline lookup failed
+1560:reims-vgpu WARN reims_vgpu_core::resources::manager::lookup: render pipeline lookup failed: Metal refused a render pipeline: compile failed: InvalidInput(InputError { kind: Abi(UnknownKey), at: Metadata { entry: None, arg: None, key: Some("llvm.module.flags") } })
+1561:reims-vgpu WARN reims_vgpu_core::gpu_task::exec: task 7: exec faulted: render pipeline lookup failed

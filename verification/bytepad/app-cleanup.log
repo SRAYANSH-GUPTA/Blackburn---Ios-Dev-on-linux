@@ -1,0 +1,3 @@
+ M pubspec.yaml
+?? articles/
+Removed build/xcross-ios-simulator created by this test. Existing build output preserved.

@@ -71,11 +71,16 @@ final class NativeAssetFrameworks<T extends PlatformHostInterface> {
       );
     }
     final targets = decoded['native-assets'] as Map<String, dynamic>;
-    final assets = targets['ios_$architecture'];
+    // LLVM calls Intel's 64-bit target x86_64; Dart code_assets uses x64.
+    final manifestArchitecture = architecture == 'x86_64'
+        ? 'x64'
+        : architecture;
+    final targetKey = 'ios_$manifestArchitecture';
+    final assets = targets[targetKey];
     if (assets == null) return const [];
     if (assets is! Map<String, dynamic>) {
       throw FlutterBuildError(
-        'Invalid native assets manifest: ios_$architecture is not a map',
+        'Invalid native assets manifest: $targetKey is not a map',
       );
     }
     final directories = <String>[

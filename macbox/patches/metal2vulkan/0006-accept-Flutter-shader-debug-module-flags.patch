@@ -1,0 +1,46 @@
+diff --git a/crates/metal2vulkan-air/src/abi/module.rs b/crates/metal2vulkan-air/src/abi/module.rs
+index eb5b0a48..993551f8 100644
+--- a/crates/metal2vulkan-air/src/abi/module.rs
++++ b/crates/metal2vulkan-air/src/abi/module.rs
+@@ -354,7 +354,8 @@ fn module_flags(
+             b"air.max_textures" => &mut l.max_textures,
+             b"air.max_read_write_textures" => &mut l.max_read_write_textures,
+             b"air.max_samplers" => &mut l.max_samplers,
+-            b"wchar_size" | b"frame-pointer" | b"SDK Version" => {
++            b"wchar_size" | b"frame-pointer" | b"SDK Version"
++            | b"Dwarf Version" | b"Debug Info Version" => {
+                 n.next(key)?;
+                 n.finish()?;
+                 continue;
+diff --git a/crates/metal2vulkan-air/src/abi/tests.rs b/crates/metal2vulkan-air/src/abi/tests.rs
+index 3a03db2d..a182dec3 100644
+--- a/crates/metal2vulkan-air/src/abi/tests.rs
++++ b/crates/metal2vulkan-air/src/abi/tests.rs
+@@ -2408,6 +2408,18 @@ fn module_level_metadata_decodes() {
+     assert_eq!(abi.producer, Some(DiagName::new("producer")));
+ }
+ 
++#[test]
++fn flutter_debug_module_flags_do_not_change_resource_limits() {
++    let abi = module_with(|b| {
++        let dwarf = node(b, &[I(7), S("Dwarf Version"), I(4)]);
++        let debug = node(b, &[I(2), S("Debug Info Version"), I(3)]);
++        let textures = node(b, &[I(7), S("air.max_textures"), I(128)]);
++        b.named_md("llvm.module.flags", &[dwarf, debug, textures]);
++    }).unwrap();
++    assert_eq!(abi.limits.max_textures, Some(128));
++    assert_eq!(abi.limits.max_samplers, None);
++}
++
+ #[test]
+ fn closed_module_level_sets() {
+     // Unknown named metadata.
+@@ -2438,7 +2450,7 @@ fn closed_module_level_sets() {
+     // Unknown module flag.
+     expect_abi(
+         module_with(|b| {
+-            let n = node(b, &[I(1), S("Debug Info Version"), I(3)]);
++            let n = node(b, &[I(1), S("unknown.module.flag"), I(3)]);
+             b.named_md("llvm.module.flags", &[n]);
+         }),
+         AbiError::UnknownKey,

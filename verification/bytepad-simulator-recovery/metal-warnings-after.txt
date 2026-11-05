@@ -1,0 +1,1 @@
+54:reims-vgpu WARN reims_vgpu_vulkan::caps: gpuCoreCount (gpu-core-count-unknown): Intel(R) Arc(tm) Graphics (MTL): its driver reports no core count and no Metal device stands for it, so the guest's device info carries none (key 34) and its device answers 0

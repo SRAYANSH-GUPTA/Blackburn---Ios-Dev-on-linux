@@ -1,0 +1,4 @@
+$ MACBOX_CONFIG=~/.config/macbox/blackburn.env ./macbox/macbox next
+  [ ] macbox init
+
+[exit 0]

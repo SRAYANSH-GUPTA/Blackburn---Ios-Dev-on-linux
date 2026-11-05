@@ -1,0 +1,7 @@
+$ isolated HOME: /home/srayansh/Documents/Golang/Blackburn/macbox/macbox init
+config: /tmp/blackburn-check-8thin35q/config.env (written; edit it before macbox create)
+ssh key: /tmp/blackburn-check-8thin35q/.ssh/macbox_ed25519
+ssh: Host macbox in ~/.ssh/config
+next: macbox doctor
+
+[exit 0]

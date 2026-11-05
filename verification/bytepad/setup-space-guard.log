@@ -1,0 +1,5 @@
+$ ./scripts/blackburn-macbox.sh setup-macbox
+MISSING: at least 150 GiB free for macbox setup; 134554684 KiB available on /home/srayansh/.local/share/macbox
+Free disk space before running setup-macbox.
+
+[exit 1]

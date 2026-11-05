@@ -1,0 +1,408 @@
+{
+  "bundle": "/home/srayansh/Documents/company repos/sdc-si/BYTEPAD_Flutter_2027/build/ios/iphonesimulator/Runner.app",
+  "info": {
+    "CFBundleDevelopmentRegion": "en",
+    "CFBundleDisplayName": "Bytepad",
+    "CFBundleExecutable": "Runner",
+    "CFBundleIdentifier": "com.example.bytepad",
+    "CFBundleInfoDictionaryVersion": "6.0",
+    "CFBundleName": "bytepad",
+    "CFBundlePackageType": "APPL",
+    "CFBundleShortVersionString": "1.8.3",
+    "CFBundleSignature": "????",
+    "CFBundleVersion": "183",
+    "LSRequiresIPhoneOS": true,
+    "UILaunchScreen": {},
+    "UISupportedInterfaceOrientations": [
+      "UIInterfaceOrientationPortrait",
+      "UIInterfaceOrientationLandscapeLeft",
+      "UIInterfaceOrientationLandscapeRight"
+    ],
+    "UISupportedInterfaceOrientations~ipad": [
+      "UIInterfaceOrientationPortrait",
+      "UIInterfaceOrientationPortraitUpsideDown",
+      "UIInterfaceOrientationLandscapeLeft",
+      "UIInterfaceOrientationLandscapeRight"
+    ],
+    "CADisableMinimumFrameDurationOnPhone": true,
+    "UIApplicationSupportsIndirectInputEvents": true,
+    "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to share images and documents.",
+    "NSPhotoLibraryAddUsageDescription": "This app needs access to save shared content to your photo library.",
+    "NSAppTransportSecurity": {
+      "NSAllowsArbitraryLoads": false,
+      "NSAllowsLocalNetworking": true
+    },
+    "LSSupportsOpeningDocumentsInPlace": true,
+    "UIFileSharingEnabled": true,
+    "UIViewControllerBasedStatusBarAppearance": false,
+    "UIStatusBarStyle": "UIStatusBarStyleLightContent",
+    "UIBackgroundModes": [
+      "fetch",
+      "remote-notification"
+    ],
+    "MinimumOSVersion": "16.0",
+    "UIRequiredDeviceCapabilities": [],
+    "UIDeviceFamily": [
+      1
+    ],
+    "CFBundleSupportedPlatforms": [
+      "iPhoneSimulator"
+    ],
+    "DTPlatformName": "iphonesimulator",
+    "DTSDKName": "iphonesimulator27.1",
+    "DTPlatformVersion": "27.1",
+    "NSBonjourServices": [
+      "_dartVmService._tcp"
+    ],
+    "NSLocalNetworkUsageDescription": "Allow Flutter tools on your computer to connect and debug your application. This prompt will not appear on release builds.",
+    "UIApplicationSceneManifest": {
+      "UIApplicationSupportsMultipleScenes": false,
+      "UISceneConfigurations": {
+        "UIWindowSceneSessionRoleApplication": [
+          {
+            "UISceneClassName": "UIWindowScene",
+            "UISceneDelegateClassName": "SceneDelegate",
+            "UISceneConfigurationName": "flutter"
+          }
+        ]
+      }
+    }
+  },
+  "binaries": [
+    {
+      "path": "Frameworks/App.framework/App",
+      "size": 4192,
+      "sha256": "12628014bb24ee886f7c318490975b4436af806080531ecc16c9a78ce0351624",
+      "file": "Mach-O 64-bit x86_64 dynamically linked shared library, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|NO_REEXPORTED_DYLIBS|APP_EXTENSION_SAFE>",
+      "slices": [
+        {
+          "architecture": "x86_64",
+          "dependencies": [
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [
+            "@executable_path/Frameworks",
+            "@loader_path/Frameworks"
+          ],
+          "signatures": [],
+          "platforms": [
+            {
+              "platform": 7,
+              "minos": 1048576,
+              "sdk": 1769728
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "Frameworks/Flutter.framework/Flutter",
+      "size": 87642928,
+      "sha256": "ef99d01ad721b16f3427b6cf521808e5156673ff555c27a7094454ebb29941b0",
+      "file": "Mach-O universal binary with 2 architectures: [x86_64:\\012- Mach-O 64-bit x86_64 dynamically linked shared library, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|NO_REEXPORTED_DYLIBS|HAS_TLV_DESCRIPTORS|APP_EXTENSION_SAFE>] [\\012- arm64]",
+      "slices": [
+        {
+          "architecture": "x86_64",
+          "dependencies": [
+            "/usr/lib/libSystem.B.dylib",
+            "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
+            "/System/Library/Frameworks/CoreMedia.framework/CoreMedia",
+            "/System/Library/Frameworks/CoreVideo.framework/CoreVideo",
+            "/System/Library/Frameworks/IOSurface.framework/IOSurface",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/System/Library/Frameworks/WebKit.framework/WebKit",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/usr/lib/libobjc.A.dylib",
+            "/System/Library/Frameworks/ImageIO.framework/ImageIO",
+            "/System/Library/Frameworks/MobileCoreServices.framework/MobileCoreServices",
+            "/System/Library/Frameworks/CoreServices.framework/CoreServices",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/CoreText.framework/CoreText",
+            "/System/Library/Frameworks/Metal.framework/Metal",
+            "/System/Library/Frameworks/MetalPerformanceShaders.framework/MetalPerformanceShaders",
+            "/System/Library/Frameworks/Security.framework/Security",
+            "/usr/lib/swift/libswiftCore.dylib",
+            "/usr/lib/swift/libswiftDarwin.dylib",
+            "/usr/lib/swift/libswiftObjectiveC.dylib",
+            "/usr/lib/swift/libswiftCoreFoundation.dylib",
+            "/usr/lib/swift/libswiftDispatch.dylib",
+            "/usr/lib/swift/libswiftXPC.dylib",
+            "/usr/lib/swift/libswiftQuartzCore.dylib",
+            "/usr/lib/swift/libswiftMetal.dylib",
+            "/usr/lib/swift/libswiftCoreImage.dylib",
+            "/usr/lib/swift/libswiftUniformTypeIdentifiers.dylib",
+            "/usr/lib/swift/libswiftos.dylib",
+            "/usr/lib/swift/libswiftOSLog.dylib",
+            "/System/Library/Frameworks/Accessibility.framework/Accessibility",
+            "/usr/lib/swift/libswiftCoreMedia.dylib",
+            "/usr/lib/swift/libswiftsimd.dylib",
+            "/usr/lib/swift/libswiftCoreAudio.dylib",
+            "/usr/lib/swift/libswiftUIKit.dylib",
+            "/usr/lib/swift/libswiftFoundation.dylib"
+          ],
+          "rpaths": [],
+          "signatures": [
+            {
+              "slot": 0,
+              "ad_hoc": false,
+              "hash": "sha256",
+              "pages": 10721,
+              "invalid_pages": [],
+              "identifier": "io.flutter.flutter",
+              "special_slots": 3
+            }
+          ],
+          "platforms": [
+            {
+              "platform": 7,
+              "minos": 983040,
+              "sdk": 1704448
+            }
+          ]
+        },
+        {
+          "architecture": "arm64",
+          "dependencies": [
+            "/usr/lib/libSystem.B.dylib",
+            "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
+            "/System/Library/Frameworks/CoreMedia.framework/CoreMedia",
+            "/System/Library/Frameworks/CoreVideo.framework/CoreVideo",
+            "/System/Library/Frameworks/IOSurface.framework/IOSurface",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/System/Library/Frameworks/WebKit.framework/WebKit",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/usr/lib/libobjc.A.dylib",
+            "/System/Library/Frameworks/ImageIO.framework/ImageIO",
+            "/System/Library/Frameworks/MobileCoreServices.framework/MobileCoreServices",
+            "/System/Library/Frameworks/CoreServices.framework/CoreServices",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/CoreText.framework/CoreText",
+            "/System/Library/Frameworks/Metal.framework/Metal",
+            "/System/Library/Frameworks/MetalPerformanceShaders.framework/MetalPerformanceShaders",
+            "/System/Library/Frameworks/Security.framework/Security",
+            "/usr/lib/swift/libswiftCore.dylib",
+            "/usr/lib/swift/libswiftDarwin.dylib",
+            "/usr/lib/swift/libswiftObjectiveC.dylib",
+            "/usr/lib/swift/libswiftCoreFoundation.dylib",
+            "/usr/lib/swift/libswiftDispatch.dylib",
+            "/usr/lib/swift/libswiftXPC.dylib",
+            "/usr/lib/swift/libswiftQuartzCore.dylib",
+            "/usr/lib/swift/libswiftMetal.dylib",
+            "/usr/lib/swift/libswiftCoreImage.dylib",
+            "/usr/lib/swift/libswiftUniformTypeIdentifiers.dylib",
+            "/usr/lib/swift/libswiftos.dylib",
+            "/usr/lib/swift/libswiftOSLog.dylib",
+            "/System/Library/Frameworks/Accessibility.framework/Accessibility",
+            "/usr/lib/swift/libswiftCoreMedia.dylib",
+            "/usr/lib/swift/libswiftsimd.dylib",
+            "/usr/lib/swift/libswiftCoreAudio.dylib",
+            "/usr/lib/swift/libswiftUIKit.dylib",
+            "/usr/lib/swift/libswiftFoundation.dylib"
+          ],
+          "rpaths": [],
+          "signatures": [
+            {
+              "slot": 0,
+              "ad_hoc": false,
+              "hash": "sha256",
+              "pages": 10495,
+              "invalid_pages": [],
+              "identifier": "io.flutter.flutter",
+              "special_slots": 3
+            }
+          ],
+          "platforms": [
+            {
+              "platform": 7,
+              "minos": 983040,
+              "sdk": 1704448
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "Frameworks/PDFium.framework/PDFium",
+      "size": 7211080,
+      "sha256": "1e1c2105d178256d7d40c06ea3649082754ef7658b6e5841b684e22e8761d338",
+      "file": "Mach-O 64-bit x86_64 dynamically linked shared library, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|NO_REEXPORTED_DYLIBS|HAS_TLV_DESCRIPTORS>",
+      "slices": [
+        {
+          "architecture": "x86_64",
+          "dependencies": [
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [
+            "@executable_path/Frameworks",
+            "@loader_path/Frameworks"
+          ],
+          "signatures": [],
+          "platforms": [
+            {
+              "platform": 7,
+              "minos": 851968,
+              "sdk": 1048576
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "Frameworks/libFlutterPluginsGenerated.dylib",
+      "size": 3558848,
+      "sha256": "265550bed55a51fe9312570ca16026d864cf677975a0313aa1496453083b3b7d",
+      "file": "Mach-O 64-bit x86_64 dynamically linked shared library, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|WEAK_DEFINES|BINDS_TO_WEAK|NO_REEXPORTED_DYLIBS>",
+      "slices": [
+        {
+          "architecture": "x86_64",
+          "dependencies": [
+            "@rpath/PDFium.framework/PDFium",
+            "@rpath/Flutter.framework/Flutter",
+            "/System/Library/Frameworks/Security.framework/Security",
+            "/System/Library/Frameworks/SystemConfiguration.framework/SystemConfiguration",
+            "/System/Library/Frameworks/CoreTelephony.framework/CoreTelephony",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/usr/lib/libc++.1.dylib",
+            "/usr/lib/libz.1.dylib",
+            "/usr/lib/libSystem.B.dylib",
+            "/System/Library/Frameworks/AVFAudio.framework/AVFAudio",
+            "/System/Library/Frameworks/AVFoundation.framework/AVFoundation",
+            "/System/Library/Frameworks/CFNetwork.framework/CFNetwork",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/usr/lib/libobjc.A.dylib",
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics",
+            "/System/Library/Frameworks/CoreMedia.framework/CoreMedia",
+            "/System/Library/Frameworks/CoreVideo.framework/CoreVideo",
+            "/System/Library/Frameworks/CryptoKit.framework/CryptoKit",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/LinkPresentation.framework/LinkPresentation",
+            "/System/Library/Frameworks/LocalAuthentication.framework/LocalAuthentication",
+            "/System/Library/Frameworks/MetricKit.framework/MetricKit",
+            "/System/Library/Frameworks/Network.framework/Network",
+            "/System/Library/Frameworks/QuartzCore.framework/QuartzCore",
+            "/System/Library/Frameworks/SafariServices.framework/SafariServices",
+            "/usr/lib/libsqlite3.dylib",
+            "/usr/lib/swift/libswiftAVFoundation.dylib",
+            "/usr/lib/swift/libswiftCore.dylib",
+            "/usr/lib/swift/libswiftCoreAudio.dylib",
+            "/usr/lib/swift/libswiftCoreFoundation.dylib",
+            "/usr/lib/swift/libswiftCoreImage.dylib",
+            "/usr/lib/swift/libswiftCoreLocation.dylib",
+            "/usr/lib/swift/libswiftCoreMIDI.dylib",
+            "/usr/lib/swift/libswiftDarwin.dylib",
+            "/usr/lib/swift/libswiftDispatch.dylib",
+            "/usr/lib/swift/libswiftMetal.dylib",
+            "/usr/lib/swift/libswiftOSLog.dylib",
+            "/usr/lib/swift/libswiftObjectiveC.dylib",
+            "/usr/lib/swift/libswiftQuartzCore.dylib",
+            "/usr/lib/swift/libswiftSpatial.dylib",
+            "/usr/lib/swift/libswiftUniformTypeIdentifiers.dylib",
+            "/usr/lib/swift/libswiftXPC.dylib",
+            "/usr/lib/swift/libswiftos.dylib",
+            "/usr/lib/swift/libswiftsimd.dylib",
+            "/usr/lib/swift/libswiftUIKit.dylib",
+            "/usr/lib/swift/libswiftNetwork.dylib"
+          ],
+          "rpaths": [
+            "/usr/lib/swift",
+            "@loader_path"
+          ],
+          "signatures": [],
+          "platforms": [
+            {
+              "platform": 7,
+              "minos": 1048576,
+              "sdk": 1769728
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "Frameworks/objective_c.framework/objective_c",
+      "size": 106032,
+      "sha256": "7bef3aac0ba169d48501776bf552ad3aedae02208ffe02b5fcb1d1d095dcd027",
+      "file": "Mach-O 64-bit x86_64 dynamically linked shared library, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|NO_REEXPORTED_DYLIBS>",
+      "slices": [
+        {
+          "architecture": "x86_64",
+          "dependencies": [
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [],
+          "signatures": [],
+          "platforms": [
+            {
+              "platform": 7,
+              "minos": 983040,
+              "sdk": 1769728
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "Runner",
+      "size": 24416,
+      "sha256": "cf29dc305ee2f85220929492b0b27ddae9d9b3c2ea6329a29de4dc8468e0267c",
+      "file": "Mach-O 64-bit x86_64 executable, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|PIE>",
+      "slices": [
+        {
+          "architecture": "x86_64",
+          "dependencies": [
+            "@rpath/libFlutterPluginsGenerated.dylib",
+            "@rpath/Flutter.framework/Flutter",
+            "/System/Library/Frameworks/UIKit.framework/UIKit",
+            "/System/Library/Frameworks/Foundation.framework/Foundation",
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+            "/usr/lib/libobjc.A.dylib",
+            "/usr/lib/libSystem.B.dylib"
+          ],
+          "rpaths": [
+            "@executable_path/Frameworks"
+          ],
+          "signatures": [],
+          "platforms": [
+            {
+              "platform": 7,
+              "minos": 1048576,
+              "sdk": 1769728
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "plists": [
+    "Frameworks/App.framework/Info.plist",
+    "Frameworks/Flutter.framework/Info.plist",
+    "Frameworks/PDFium.framework/Info.plist",
+    "Frameworks/objective_c.framework/Info.plist",
+    "Info.plist"
+  ],
+  "errors": [],
+  "native_assets": {
+    "format-version": [
+      1,
+      0,
+      0
+    ],
+    "native-assets": {
+      "ios_x64": {
+        "package:objective_c/objective_c.dylib": [
+          "absolute",
+          "objective_c.framework/objective_c"
+        ]
+      }
+    }
+  }
+}

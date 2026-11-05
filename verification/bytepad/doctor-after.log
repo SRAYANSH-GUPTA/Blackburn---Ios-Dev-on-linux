@@ -1,0 +1,194 @@
+$ ./scripts/blackburn-macbox.sh doctor
+OK: test -r /dev/kvm
+OK: test -w /dev/kvm
+OK: test -r /dev/dri/renderD128
+OK: test -w /dev/dri/renderD128
+/usr/bin/docker
+OK: command -v docker
+/usr/bin/dart
+OK: command -v dart
+/usr/bin/flutter
+OK: command -v flutter
+/usr/bin/swift
+OK: command -v swift
+/usr/bin/clang
+OK: command -v clang
+/usr/bin/ld64.lld
+OK: command -v ld64.lld
+/usr/bin/rsync
+OK: command -v rsync
+/usr/bin/ssh
+OK: command -v ssh
+Client:
+ Version:    29.9.2
+ Context:    default
+ Debug Mode: false
+ Plugins:
+  compose: Docker Compose (Docker Inc.)
+    Version:  5.6.1
+    Path:     /usr/lib/docker/cli-plugins/docker-compose
+
+Server:
+ Containers: 3
+  Running: 0
+  Paused: 0
+  Stopped: 3
+ Images: 99
+ Server Version: 29.9.2
+ Storage Driver: overlayfs
+  driver-type: io.containerd.snapshotter.v1
+ Logging Driver: json-file
+ Cgroup Driver: systemd
+ Cgroup Version: 2
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+ CDI spec directories:
+  /etc/cdi
+  /var/run/cdi
+ Swarm: inactive
+ Runtimes: io.containerd.runc.v2 runc
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: b7a25261e029d68978bbf290df0a62fc819b3c51.m
+ runc version: 
+ init version: de40ad0
+ Security Options:
+  seccomp
+   Profile: builtin
+  cgroupns
+ Kernel Version: 7.2.11-arch1-1
+ Operating System: Arch Linux
+ OSType: linux
+ Architecture: x86_64
+ CPUs: 22
+ Total Memory: 15.3GiB
+ Name: archlinux
+ ID: e9d561f2-97f5-48b7-b5bc-5e6dfd7a9e7e
+ Docker Root Dir: /var/lib/docker
+ Debug Mode: false
+ Experimental: false
+ Insecure Registries:
+  127.0.0.0/8
+  ::1/128
+ Live Restore Enabled: false
+ Firewall Backend: iptables
+  EnableUserlandProxy: true
+  UserlandProxyPath: /usr/bin/docker-proxy
+
+OK: docker info
+==========
+VULKANINFO
+==========
+
+Vulkan Instance Version: 1.4.363
+
+
+Instance Extensions: count = 26
+-------------------------------
+VK_EXT_acquire_drm_display             : extension revision 1
+VK_EXT_acquire_xlib_display            : extension revision 1
+VK_EXT_debug_report                    : extension revision 10
+VK_EXT_debug_utils                     : extension revision 2
+VK_EXT_direct_mode_display             : extension revision 1
+VK_EXT_display_surface_counter         : extension revision 1
+VK_EXT_headless_surface                : extension revision 1
+VK_EXT_layer_settings                  : extension revision 2
+VK_EXT_surface_maintenance1            : extension revision 1
+VK_EXT_swapchain_colorspace            : extension revision 5
+VK_KHR_device_group_creation           : extension revision 1
+VK_KHR_display                         : extension revision 23
+VK_KHR_external_fence_capabilities     : extension revision 1
+VK_KHR_external_memory_capabilities    : extension revision 1
+VK_KHR_external_semaphore_capabilities : extension revision 1
+VK_KHR_get_display_properties2         : extension revision 1
+VK_KHR_get_physical_device_properties2 : extension revision 2
+VK_KHR_get_surface_capabilities2       : extension revision 1
+VK_KHR_portability_enumeration         : extension revision 1
+VK_KHR_surface                         : extension revision 25
+VK_KHR_surface_maintenance1            : extension revision 1
+VK_KHR_surface_protected_capabilities  : extension revision 1
+VK_KHR_wayland_surface                 : extension revision 6
+VK_KHR_xcb_surface                     : extension revision 6
+VK_KHR_xlib_surface                    : extension revision 6
+VK_LUNARG_direct_driver_loading        : extension revision 1
+
+Instance Layers: count = 8
+--------------------------
+VK_LAYER_MANGOHUD_overlay_x86     Vulkan Hud Overlay                                           1.3.0    version 1
+VK_LAYER_MANGOHUD_overlay_x86_64  Vulkan Hud Overlay                                           1.3.0    version 1
+VK_LAYER_MESA_anti_lag            Open-source implementation of the VK_AMD_anti_lag extension. 1.4.303  version 1
+VK_LAYER_MESA_device_select       Linux device selection layer                                 1.4.303  version 1
+VK_LAYER_VALVE_steam_fossilize_32 Steam Pipeline Caching Layer                                 1.3.207  version 1
+VK_LAYER_VALVE_steam_fossilize_64 Steam Pipeline Caching Layer                                 1.3.207  version 1
+VK_LAYER_VALVE_steam_overlay_32   Steam Overlay Layer                                          1.3.207  version 1
+VK_LAYER_VALVE_steam_overlay_64   Steam Overlay Layer                                          1.3.207  version 1
+
+Devices:
+========
+GPU0:
+	apiVersion         = 1.4.354
+	driverVersion      = 26.2.6
+	vendorID           = 0x8086
+	deviceID           = 0x7d55
+	deviceType         = PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU
+	deviceName         = Intel(R) Arc(tm) Graphics (MTL)
+	driverID           = DRIVER_ID_INTEL_OPEN_SOURCE_MESA
+	driverName         = Intel open-source Mesa driver
+	driverInfo         = Mesa 26.2.6-arch1.1
+	conformanceVersion = 1.4.0.0
+	deviceUUID         = 8680557d-0800-0000-0002-000000000000
+	driverUUID         = c5d8832d-f5f8-c9a3-0b81-ec48d8bdb1d0
+OK: vulkaninfo --summary
+MISSING: at least 150 GiB free for macbox setup; 134813096 KiB available on /home/srayansh/.local/share/macbox
+MISSING: check_setup_space
+Running build hooks...Running build hooks...Build and run Flutter and Compose Multiplatform iOS apps without Xcode.
+
+Usage: xcross <command> [arguments]
+
+Global options:
+-h, --help       Print this usage information.
+-v, --verbose    Verbose output (show every command and tool line).
+    --version    Print the xcross version and exit.
+
+Available commands:
+  auth         Save App Store Connect API key credentials or sign in with Apple ID for the native (no-Swift) signing pipeline.
+  cache        Manage the Flutter caches xcross downloads.
+  completion   Print a shell completion script for xcross. Append the output to your shell config file (e.g. ~/.bashrc or ~/.zshrc) to enable tab-completion.
+  compose      Build, run, and diagnose Compose Multiplatform iOS apps without Xcode.
+  config       Create, inspect, and validate xcross configuration.
+  flutter      Build, run, and diagnose Flutter iOS apps without Xcode.
+  ide          Set up editor integration for Run & Debug on an iOS device.
+  sdk          Manage the xcross Darwin Swift SDK.
+  setup        Install or verify host requirements
+  tunnel       Mount the Developer Disk Image and start the iOS 17+ RSD tunnel (mounter auto-mount + lockdown start-tunnel + tunneld). With --wifi: pair over USB when available, otherwise reconnect a saved device or pair on-device, then tunnel over Wi-Fi. Requires sudo on POSIX or an Administrator terminal on Windows.
+  update       Update xcross to the latest release or install an explicit git ref.
+
+Run "xcross help <command>" for more information about a command.
+OK: xcross --help
+Running build hooks...Running build hooks...[!] Flutter project
+    ! Project      No pubspec.yaml in the current directory.
+    ✓ Flutter SDK  /home/srayansh/.cache/flutter_sdk
+
+[✗] iOS toolchain
+    ✓ Host        linux is supported.
+    ✓ swift       /usr/bin/swift
+    ✓ clang++     /usr/bin/clang++
+    ✓ llvm-ar     /usr/bin/llvm-ar
+    ✓ iOS clang   Ready
+                  /usr/bin/clang
+    ✓ iOS linker  Ready (LLD 23.1)
+                  /usr/bin/ld64.lld
+    ✗ Darwin SDK  The Darwin SDK was installed against Swift "Swift version 6.4 (swift-6.4-RELEASE)" (/usr/lib/swift/usr/bin/swift-driver), but the `swift` now on PATH is "Swift version 6.4.2 (swift-6.4.2-RELEASE)" (/usr/lib/swift/usr/bin/swift-driver). Reinstall it with `xcross sdk install <Xcode.xip>`.
+
+[!] Deployment
+    ✓ Device tools    /home/srayansh/.local/bin/pymobiledevice3
+    ✓ Authentication  Apple ID session is available.
+    ! Device          No connected iOS device found.
+
+error: Doctor found 1 failure and 2 warnings.
+MISSING: xcross flutter doctor
+Guest RAM: 8G; GPU: /dev/dri/renderD128; free disk: 134813096 KiB
+
+[exit 1]

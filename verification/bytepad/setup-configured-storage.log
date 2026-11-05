@@ -1,0 +1,5 @@
+$ setup-macbox with configured nonexistent storage path
+MISSING: at least 150 GiB free for macbox setup; 7212428 KiB available on /tmp/blackburn-storage-u8ypzhsb
+Free disk space before running setup-macbox.
+
+[exit 1]

@@ -1,0 +1,30 @@
+    Updating crates.io index
+     Locking 51 packages to latest compatible versions
+      Adding base64 v0.22.1 (available: v0.23.1)
+      Adding rusqlite v0.32.1 (available: v0.41.1)
+      Adding syn v2.0.119 (available: v3.0.9)
+   Compiling typenum v1.20.1
+   Compiling hybrid-array v0.4.15
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling digest v0.11.3
+   Compiling cfg-if v1.0.5
+   Compiling cpufeatures v0.3.1
+   Compiling sha2 v0.11.1
+   Compiling metal2vulkan-devtools v0.1.0 (/home/srayansh/.local/share/macbox/src/metal2vulkan/crates/metal2vulkan-devtools)
+   Compiling metal2vulkan-air v0.2.0 (/home/srayansh/.local/share/macbox/src/metal2vulkan/crates/metal2vulkan-air)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 01s
+     Running unittests src/lib.rs (/home/srayansh/.local/share/macbox/build/air-tests/debug/deps/metal2vulkan_air-d231c06f8fce723b)
+
+running 8 tests
+test abi::tests::flutter_debug_module_flags_do_not_change_resource_limits ... ok
+test abi::tests::closed_module_level_sets ... ok
+test abi::tests::module_level_metadata_decodes ... ok
+test bitcode::tests::synthetic_module_decodes_every_module_level_table ... ok
+test bitcode::function_tests::function_metadata_continues_the_module_numbering ... ok
+test bitcode::function_tests::the_module_symbol_table_locates_every_body ... ok
+test canon::link_tests::linked_module_features_not_implemented_are_refused_at_the_call ... ok
+test canon::tests::the_matmul2d_passes_skip_a_module_without_their_declarations ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 463 filtered out; finished in 0.01s
+

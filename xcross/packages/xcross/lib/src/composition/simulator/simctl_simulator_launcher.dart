@@ -239,6 +239,9 @@ final class SimctlSimulatorLauncher<T extends PlatformHostInterface> {
           await Future<void>.delayed(const Duration(milliseconds: 200));
         }
       }
+      // Publish only the reachable host-side URI, retaining the auth path.
+      // XcrossDap watches this exact marker to connect its debugger.
+      runtime.output.writeln('vm-service: ${websocketUri(uri)}');
       vm.onConnectionLost = stop;
       if (hotReload != null) {
         controller = HotReloadController(

@@ -1,0 +1,23 @@
+--- a/packages/xcross/lib/src/shared/dap/xcross_dap.dart
++++ b/packages/xcross/lib/src/shared/dap/xcross_dap.dart
+@@ -133,7 +133,7 @@
+       launcher,
+       ['flutter', 'run', '--target', target, ...?launchArgs.args],
+       workingDirectory: cwd,
+-      environment: const {'XCROSS_DAP': '1'},
++      environment: {...?launchArgs.env, 'XCROSS_DAP': '1'},
+     );
+   }
+ 
+--- a/packages/xcross/lib/src/composition/simulator/simctl_simulator_launcher.dart
++++ b/packages/xcross/lib/src/composition/simulator/simctl_simulator_launcher.dart
+@@ -239,6 +239,9 @@
+           await Future<void>.delayed(const Duration(milliseconds: 200));
+         }
+       }
++      // Publish only the reachable host-side URI, retaining the auth path.
++      // XcrossDap watches this exact marker to connect its debugger.
++      runtime.output.writeln('vm-service: ${websocketUri(uri)}');
+       vm.onConnectionLost = stop;
+       if (hotReload != null) {
+         controller = HotReloadController(

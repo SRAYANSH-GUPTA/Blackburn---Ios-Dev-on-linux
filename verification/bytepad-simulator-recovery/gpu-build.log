@@ -1,0 +1,31 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.18s
+     Running `/home/srayansh/.local/share/macbox/build/target/debug/xtask dist --platform vulkan`
+$ make -C /home/srayansh/.local/share/macbox/src/reims-vgpu/firmware BUILD=/home/srayansh/.local/share/macbox/build/target/firmware rom
+make: Entering directory '/home/srayansh/.local/share/macbox/src/reims-vgpu/firmware'
+make: Nothing to be done for 'rom'.
+make: Leaving directory '/home/srayansh/.local/share/macbox/src/reims-vgpu/firmware'
+$ /home/srayansh/.local/share/macbox/home/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo rustc --profile release -p reims-vgpu-c --lib --features reims-vgpu-c/vulkan -- -C link-arg=-Wl,-soname,libreims_vgpu.so
+   Compiling metal2vulkan v0.2.0 (/home/srayansh/.local/share/macbox/src/metal2vulkan/crates/metal2vulkan)
+   Compiling metal2vulkan-air v0.2.0 (/home/srayansh/.local/share/macbox/src/metal2vulkan/crates/metal2vulkan-air)
+   Compiling metal2vulkan-runtime v0.2.0 (/home/srayansh/.local/share/macbox/src/metal2vulkan/crates/metal2vulkan-runtime)
+   Compiling reims-vgpu-vulkan v0.1.0 (/home/srayansh/.local/share/macbox/src/reims-vgpu/crates/reims-vgpu-vulkan)
+warning: missing documentation for a module
+   --> crates/reims-vgpu-vulkan/src/gpu/caps.rs:206:1
+    |
+206 | pub mod stand_in {
+    | ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W missing-docs`
+
+   Compiling reims-vgpu-window v0.1.0 (/home/srayansh/.local/share/macbox/src/reims-vgpu/crates/reims-vgpu-window)
+   Compiling reims-vgpu v0.1.0 (/home/srayansh/.local/share/macbox/src/reims-vgpu/crates/reims-vgpu)
+warning: `reims-vgpu-vulkan` (lib) generated 1 warning
+   Compiling reims-vgpu-c v0.1.0 (/home/srayansh/.local/share/macbox/src/reims-vgpu/crates/reims-vgpu-c)
+    Finished `release` profile [optimized] target(s) in 11m 49s
+$ ld -r --whole-archive /home/srayansh/.local/share/macbox/build/target/release/libreims_vgpu_c.a -o /home/srayansh/.local/share/macbox/build/target/dist-localized/reims_vgpu.o
+$ objcopy --keep-global-symbols=/home/srayansh/.local/share/macbox/build/target/dist-localized/keep-global-symbols /home/srayansh/.local/share/macbox/build/target/dist-localized/reims_vgpu.o
+$ ar rcs /home/srayansh/.local/share/macbox/build/target/dist-vulkan/lib/libreims_vgpu.a /home/srayansh/.local/share/macbox/build/target/dist-localized/reims_vgpu.o
+xtask dist: cd "/home/srayansh/.local/share/macbox/src/reims-vgpu" && "/home/srayansh/.local/share/macbox/home/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo" "rustc" "--profile" "release" "-p" "reims-vgpu-c" "--lib" "--features" "reims-vgpu-c/vulkan" "--crate-type" "staticlib" "--message-format" "json" "--" "--print" "native-static-libs" failed (signal: 15 (SIGTERM)):    Compiling metal2vulkan-air v0.2.0 (/home/srayansh/.local/share/macbox/src/metal2vulkan/crates/metal2vulkan-air)
+   Compiling metal2vulkan v0.2.0 (/home/srayansh/.local/share/macbox/src/metal2vulkan/crates/metal2vulkan)
+   Compiling metal2vulkan-runtime v0.2.0 (/home/srayansh/.local/share/macbox/src/metal2vulkan/crates/metal2vulkan-runtime)
+

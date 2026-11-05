@@ -1,0 +1,35 @@
+$ /home/srayansh/Documents/Golang/Blackburn/scripts/blackburn-macbox.sh build-sim
+Running build hooks...Running build hooks...Resolving dependencies…
+Resolving dependencies                1.9s
+Fetching Flutter engine artifacts…
+Flutter iOS engine 0%  569 B / 88.8 MB
+Flutter iOS engine 10%  8.9 MB / 88.8 MB
+Flutter iOS engine 20%  17.8 MB / 88.8 MB
+Flutter iOS engine 30%  26.6 MB / 88.8 MB
+Flutter iOS engine 40%  35.5 MB / 88.8 MB
+Flutter iOS engine 50%  44.4 MB / 88.8 MB
+Flutter iOS engine 60%  53.3 MB / 88.8 MB
+Flutter iOS engine 70%  62.2 MB / 88.8 MB
+Flutter iOS engine 80%  71.0 MB / 88.8 MB
+Flutter iOS engine 90%  79.9 MB / 88.8 MB
+Flutter iOS engine 100%  88.8 MB / 88.8 MB
+ Flutter iOS engine                    88.8 MB
+Extracting Flutter iOS engine…
+Extracting Flutter iOS engine         1.3s
+Fetching Flutter engine artifacts     29.3s
+Compiling Dart kernel…
+Compiling Dart kernel                 16.9s
+Bundling assets…
+Bundling assets                       0.8s
+Building App.framework…
+Building App.framework                0.3s
+Building native assets…
+Building native assets                24.9s
+Building Flutter plugins (Swift Package Manager)…
+Building Flutter plugins (Swift Package Manager)
+error: The Darwin SDK was installed against Swift "Swift version 6.4 (swift-6.4-RELEASE)" (/usr/lib/swift/usr/bin/swift-driver), but the `swift` now on PATH is "Swift version 6.4.2 (swift-6.4.2-RELEASE)" (/usr/lib/swift/usr/bin/swift-driver).
+The Darwin SDK bundle carries Swift module interfaces that only the toolchain it was installed with can compile, so switching Swift versions (swiftly, mise, or a distro upgrade) invalidates it.
+Either select the Swift toolchain the SDK was installed with, or reinstall the SDK against the current one:
+    xcross sdk install <path-to-Xcode.xip>
+
+[exit 1]

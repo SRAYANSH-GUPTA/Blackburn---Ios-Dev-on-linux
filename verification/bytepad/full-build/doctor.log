@@ -1,0 +1,27 @@
+Running build hooks...Running build hooks...[!] Flutter project
+    ✓ Project                 bytepad
+    ✓ Entrypoint              /home/srayansh/Documents/company repos/sdc-si/BYTEPAD_Flutter_2027/lib/main.dart
+    ✓ Flutter SDK             /home/srayansh/.cache/flutter_sdk
+    ✓ Packages                Resolved
+                              /home/srayansh/Documents/company repos/sdc-si/BYTEPAD_Flutter_2027/.dart_tool/package_config.json
+    ! AOT compiler (release)  No prebuilt compiler is published for Flutter 3.47.7 (engine deb28748) on linux-x64. Debug builds are unaffected.
+    ! AOT compiler (profile)  No prebuilt compiler is published for Flutter 3.47.7 (engine deb28748) on linux-x64. Debug builds are unaffected.
+
+[✓] iOS toolchain
+    ✓ Host        linux is supported.
+    ✓ swift       /usr/bin/swift
+    ✓ clang++     /usr/bin/clang++
+    ✓ llvm-ar     /usr/bin/llvm-ar
+    ✓ iOS clang   Ready
+                  /usr/bin/clang
+    ✓ iOS linker  Ready (LLD 23.1)
+                  /usr/bin/ld64.lld
+    ✓ Darwin SDK  Installed
+                  /home/srayansh/.config/xcross/swift-sdks/xcross-darwin.artifactbundle
+
+[!] Deployment
+    ✓ Device tools    /home/srayansh/.local/bin/pymobiledevice3
+    ✓ Authentication  Apple ID session is available.
+    ! Device          No connected iOS device found.
+
+Doctor found 3 warnings.

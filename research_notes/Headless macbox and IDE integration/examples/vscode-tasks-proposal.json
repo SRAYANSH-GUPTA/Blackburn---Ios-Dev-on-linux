@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Blackburn: run simulator CLI",
+      "type": "process",
+      "command": "xcross",
+      "args": [
+        "flutter",
+        "run",
+        "--target-platform",
+        "simulator",
+        "--udid",
+        "REPLACE_WITH_SIMULATOR_UUID",
+        "--debug"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "XCROSS_SIMULATOR_HOST": "blackburn-sim",
+          "XCROSS_SIMULATOR_ARCH": "x86_64"
+        }
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated"
+      }
+    }
+  ]
+}

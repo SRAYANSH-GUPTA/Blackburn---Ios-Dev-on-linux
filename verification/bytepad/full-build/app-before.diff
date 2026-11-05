@@ -1,0 +1,13 @@
+diff --git a/pubspec.yaml b/pubspec.yaml
+index 98aa2b6..706a409 100755
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -112,6 +112,8 @@ flutter:
+         - asset: assets/fonts/Gilroy-Medium.ttf
+         - asset: assets/fonts/Gilroy-SemiBold.ttf
+         - asset: assets/fonts/Gilroy-Thin.ttf
++xcross:
++  bundle_id: prefixed
+     
+   
+   

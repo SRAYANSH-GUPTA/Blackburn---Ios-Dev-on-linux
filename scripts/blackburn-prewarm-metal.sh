@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Run on Linux after the macOS guest becomes reachable over SSH.
+# Work around compressed Metal-plugin page-in failures without changing the SSV.
+set -euo pipefail
+ssh macbox /bin/bash -s <<'GUEST'
+set -euo pipefail
+plugin=/System/Library/Extensions/AppleParavirtGPUMetalIOGPUFamily.bundle/Contents/MacOS/AppleParavirtGPUMetalIOGPUFamily
+# A complete sequential read preceded successful simctl calls during recovery.
+# This is a per-boot cache workaround, not an on-disk filesystem repair.
+/usr/bin/shasum -a 256 "$plugin"
+/usr/bin/codesign --verify --verbose=2 "$plugin"
+/usr/bin/xcrun simctl list devices
+GUEST

@@ -1,0 +1,3 @@
+$ bash -n scripts/blackburn-macbox.sh macbox/macbox
+
+[exit 0]

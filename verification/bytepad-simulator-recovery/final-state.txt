@@ -1,0 +1,12 @@
+== Devices ==
+-- iOS 26.5 --
+    iPhone 17 Pro (macbox slim 1) (6F8411E4-C8B3-4389-AA0C-F6464E24CD4B) (Booted) 
+  PID STAT ELAPSED COMM
+  199 Ss     02:30 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  906 Ss     00:51 /Users/maac/Library/Developer/CoreSimulator/Devices/6F8411E4-C8B3-4389-AA0C-F6464E24CD4B/data/Containers/Bundle/Application/EA7C0DF1-FB4E-4BCD-B69F-951A087F046B/Runner.app/Runner
+Monitoring boot status for iPhone 17 Pro (macbox slim 1) (6F8411E4-C8B3-4389-AA0C-F6464E24CD4B).
+Device already booted, nothing to do.
+
+  PID STAT ELAPSED COMM
+  199 Ss     03:25 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  906 Ss     01:46 /Users/maac/Library/Developer/CoreSimulator/Devices/6F8411E4-C8B3-4389-AA0C-F6464E24CD4B/data/Containers/Bundle/Application/EA7C0DF1-FB4E-4BCD-B69F-951A087F046B/Runner.app/Runner

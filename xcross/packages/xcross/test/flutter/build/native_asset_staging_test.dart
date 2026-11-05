@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cli_kit/host/linux/linux_host.dart';
@@ -25,6 +26,39 @@ void main() {
     frameworks = nativeFrameworkService(fixtureRunner(host, log: fixtureLog()));
   });
   tearDown(() => temporary.deleteSync(recursive: true));
+
+  test('Intel simulator collects Flutter ios_x64 native frameworks', () {
+    final host = LinuxHost(fileSystem: mapped);
+    final service = NativeAssetFrameworks(
+      architecture: 'x86_64',
+      fileSystem: host.fileSystem,
+      paths: host.paths.context,
+      runner: fixtureRunner(host, log: fixtureLog()),
+      copier: RecursiveDirectoryCopier(
+        fileSystem: host.fileSystem,
+        paths: host.paths.context,
+      ),
+    );
+    mapped
+        .directory(p.join(output, 'native_assets', 'objective_c.framework'))
+        .createSync(recursive: true);
+    final manifest = jsonEncode({
+      'native-assets': {
+        'ios_x64': {
+          'package:objective_c/objective_c.dylib': [
+            'absolute',
+            'objective_c.framework/objective_c',
+          ],
+        },
+        'ios_arm64': {
+          'package:other/other.dylib': ['absolute', 'Other.framework/Other'],
+        },
+      },
+    });
+    expect(service.collect(manifest, output), [
+      p.join(output, 'native_assets', 'objective_c.framework'),
+    ]);
+  });
 
   test(
     testOn: '!windows',

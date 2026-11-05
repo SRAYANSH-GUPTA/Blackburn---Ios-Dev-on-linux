@@ -1,0 +1,178 @@
+{"app_name":"simctl","timestamp":"2026-11-05 23:37:34.00 +0530","app_version":"1051.55","slice_uuid":"0fdec159-f559-3aa3-81b3-729ed0448a76","build_version":"1051.55","platform":1,"share_with_app_devs":0,"is_first_party":1,"bug_type":"309","os_version":"macOS 26.7.2 (25G332)","roots_installed":0,"incident_id":"0BFD8E01-E8EF-409D-8650-62898099C04B","name":"simctl"}
+{
+  "uptime" : 320,
+  "procRole" : "Unspecified",
+  "version" : 2,
+  "userID" : 501,
+  "deployVersion" : 210,
+  "modelCode" : "iMac20,1",
+  "coalitionID" : 959,
+  "osVersion" : {
+    "train" : "macOS 26.7.2",
+    "build" : "25G332",
+    "releaseType" : "User"
+  },
+  "captureTime" : "2026-11-05 23:32:07.5440 +0530",
+  "codeSigningMonitor" : 0,
+  "incident" : "0BFD8E01-E8EF-409D-8650-62898099C04B",
+  "pid" : 1250,
+  "cpuType" : "X86-64",
+  "procLaunch" : "2026-11-05 23:32:06.1421 +0530",
+  "procStartAbsTime" : 323356882277,
+  "procExitAbsTime" : 324757603986,
+  "procName" : "simctl",
+  "procPath" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/Resources\/bin\/simctl",
+  "bundleInfo" : {"CFBundleVersion":"1051.55","CFBundleShortVersionString":"1051.55"},
+  "parentProc" : "sshd-session",
+  "parentPid" : 1249,
+  "coalitionName" : "com.openssh.sshd.BF7870FA-7822-4C2B-8D86-224A26CD83B1",
+  "crashReporterKey" : "3821D9ED-4DB6-EBE4-460A-C4A5D91ED0F9",
+  "appleIntelligenceStatus" : {"state":"unavailable","reasons":["deviceNotCapable"]},
+  "developerMode" : 1,
+  "responsiblePid" : 1232,
+  "responsibleProc" : "sshd-session",
+  "codeSigningID" : "com.apple.CoreSimulator.simctl",
+  "codeSigningTeamID" : "",
+  "codeSigningFlags" : 570522369,
+  "codeSigningValidationCategory" : 1,
+  "codeSigningTrustLevel" : 4294967295,
+  "codeSigningAuxiliaryInfo" : 288230376151711744,
+  "bootSessionUUID" : "2F670044-96E7-4282-93F2-F2282E17E955",
+  "sip" : "enabled",
+  "vmRegionInfo" : "0x10b29fe96 is not in any region.  Bytes before following region: 140733003989354\n      REGION TYPE                    START - END         [ VSIZE] PRT\/MAX SHRMOD  REGION DETAIL\n      UNUSED SPACE AT START\n--->  \n      shared memory            7fffffe00000-7fffffe01000 [    4K] r--\/r-- SM=SHM  ",
+  "exception" : {"codes":"0x000000000000000a, 0x000000010b29fe96","rawCodes":[10,4482268822],"type":"EXC_BAD_ACCESS","signal":"SIGBUS","subtype":"KERN_MEMORY_ERROR at 0x000000010b29fe96"},
+  "termination" : {"flags":0,"code":10,"namespace":"SIGNAL","indicator":"Bus error: 10","byProc":"exc handler","byPid":1250},
+  "ktriageinfo" : "APFS - (arg = 0x1e1005e00300001) Encountered a compressed data hash mismatch\nVM - (arg = 0x0) Page has restart bit set\nAPFS - (arg = 0x1e1005e00300001) Encountered a compressed data hash mismatch\nAPFS - (arg = 0x3a47005e00300001) Pagein of compressed inode failed\nVM - (arg = 0x190000005e) Filesystem pagein returned an error in vnode_pagein\n",
+  "vmregioninfo" : "0x10b29fe96 is not in any region.  Bytes before following region: 140733003989354\n      REGION TYPE                    START - END         [ VSIZE] PRT\/MAX SHRMOD  REGION DETAIL\n      UNUSED SPACE AT START\n--->  \n      shared memory            7fffffe00000-7fffffe01000 [    4K] r--\/r-- SM=SHM  ",
+  "extMods" : {"caller":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"system":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"targeted":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"warnings":0},
+  "faultingThread" : 1,
+  "threads" : [{"id":13387,"frames":[],"threadState":{"r13":{"value":21592279046},"rax":{"value":268451845},"rflags":{"value":518},"cpu":{"value":0},"r14":{"value":2},"rsi":{"value":21592279046},"r8":{"value":2270685456},"cr2":{"value":0},"rdx":{"value":8589934592},"r10":{"value":28600187224064},"r9":{"value":28600187224064},"r15":{"value":2270685456},"rbx":{"value":140701874696304},"trap":{"value":133},"err":{"value":16777263},"r11":{"value":518},"rip":{"value":140703206026062},"rbp":{"value":140701874696144},"rsp":{"value":140701874696040},"r12":{"value":28600187224064},"rcx":{"value":140701874696040},"flavor":"x86_THREAD_STATE","rdi":{"value":140701874696304}}},{"triggered":true,"id":13395,"threadState":{"r13":{"value":140703201689728},"rax":{"value":105553142309392},"rflags":{"value":66054},"cpu":{"value":1},"r14":{"value":140703201689728},"rsi":{"value":140703739284114},"r8":{"value":2},"cr2":{"value":4482268822},"rdx":{"value":140703739321494},"r10":{"value":4482652466},"r9":{"value":3433084923},"r15":{"value":105553172337344},"rbx":{"value":140396474727424},"trap":{"value":14,"description":"(no mapping for user instruction read)"},"err":{"value":20},"r11":{"value":4482268822},"rip":{"value":4482268822},"rbp":{"value":123145518914592},"rsp":{"value":123145518914520},"r12":{"value":105553179170624},"rcx":{"value":2},"flavor":"x86_THREAD_STATE","rdi":{"value":105553142309392}},"frames":[]},{"id":13400,"frames":[],"threadState":{"r13":{"value":0},"rax":{"value":33554800},"rflags":{"value":512},"cpu":{"value":0},"r14":{"value":1},"rsi":{"value":8195},"r8":{"value":409604},"cr2":{"value":0},"rdx":{"value":123145518931968},"r10":{"value":0},"r9":{"value":18446744073709551615},"r15":{"value":123145519455096},"rbx":{"value":123145519456256},"trap":{"value":133},"err":{"value":33554800},"r11":{"value":582},"rip":{"value":140703206287372},"rbp":{"value":0},"rsp":{"value":123145519456256},"r12":{"value":5193732},"rcx":{"value":0},"flavor":"x86_THREAD_STATE","rdi":{"value":123145519456256}}},{"id":13401,"frames":[],"threadState":{"r13":{"value":0},"rax":{"value":33554800},"rflags":{"value":512},"cpu":{"value":0},"r14":{"value":0},"rsi":{"value":10499},"r8":{"value":409604},"cr2":{"value":0},"rdx":{"value":123145519468544},"r10":{"value":0},"r9":{"value":18446744073709551615},"r15":{"value":0},"rbx":{"value":123145519992832},"trap":{"value":133},"err":{"value":33554800},"r11":{"value":582},"rip":{"value":140703206287372},"rbp":{"value":0},"rsp":{"value":123145519992832},"r12":{"value":0},"rcx":{"value":0},"flavor":"x86_THREAD_STATE","rdi":{"value":123145519992832}}},{"id":13416,"frames":[],"threadState":{"r13":{"value":0},"rax":{"value":33554800},"rflags":{"value":512},"cpu":{"value":0},"r14":{"value":1},"rsi":{"value":15371},"r8":{"value":409604},"cr2":{"value":0},"rdx":{"value":123145520005120},"r10":{"value":0},"r9":{"value":18446744073709551615},"r15":{"value":123145520528256},"rbx":{"value":123145520529408},"trap":{"value":133},"err":{"value":33554800},"r11":{"value":582},"rip":{"value":140703206287372},"rbp":{"value":0},"rsp":{"value":123145520529408},"r12":{"value":3948552},"rcx":{"value":0},"flavor":"x86_THREAD_STATE","rdi":{"value":123145520529408}}}],
+  "usedImages" : [
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4474089472,
+    "size" : 532480,
+    "uuid" : "0fdec159-f559-3aa3-81b3-729ed0448a76",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/Resources\/bin\/simctl",
+    "name" : "simctl"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4476096512,
+    "CFBundleShortVersionString" : "1051.55",
+    "CFBundleIdentifier" : "com.apple.CoreSimulator.CoreSimulatorUtilities",
+    "size" : 335872,
+    "uuid" : "23ebaff4-91a4-33cc-9048-ea3be1dd0611",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/Frameworks\/CoreSimulatorUtilities.framework\/Versions\/A\/CoreSimulatorUtilities",
+    "name" : "CoreSimulatorUtilities",
+    "CFBundleVersion" : "1051.55"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4475473920,
+    "CFBundleShortVersionString" : "16.0",
+    "CFBundleIdentifier" : "com.apple.CoreSimulator.SimPasteboardPlus",
+    "size" : 176128,
+    "uuid" : "3c10a30a-d203-36be-9a96-bbb5633ccda8",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/Frameworks\/SimPasteboardPlus.framework\/Versions\/A\/SimPasteboardPlus",
+    "name" : "SimPasteboardPlus",
+    "CFBundleVersion" : "1051.55"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4479725568,
+    "CFBundleShortVersionString" : "1051.55",
+    "CFBundleIdentifier" : "com.apple.CoreSimulator",
+    "size" : 950272,
+    "uuid" : "ecc53c9b-93b0-326a-97f2-b8f1f0b3a132",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/CoreSimulator",
+    "name" : "CoreSimulator",
+    "CFBundleVersion" : "1051.55"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4474826752,
+    "CFBundleShortVersionString" : "46",
+    "CFBundleIdentifier" : "com.apple.ROCKit",
+    "size" : 286720,
+    "uuid" : "562afae0-4805-3689-8b68-71c384edd03d",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/ROCKit.framework\/Versions\/A\/ROCKit",
+    "name" : "ROCKit",
+    "CFBundleVersion" : "46"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4476702720,
+    "CFBundleShortVersionString" : "17.0",
+    "CFBundleIdentifier" : "com.apple.dt.DVTDownloads",
+    "size" : 745472,
+    "uuid" : "053bd37e-2f78-325c-b49f-c434f6c8ffd4",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/DVTDownloads.framework\/Versions\/A\/DVTDownloads",
+    "name" : "DVTDownloads",
+    "CFBundleVersion" : "24431"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4475785216,
+    "CFBundleShortVersionString" : "1051.55",
+    "CFBundleIdentifier" : "com.apple.CoreSimulator.CoreSimDeviceIO",
+    "size" : 61440,
+    "uuid" : "88dc69a1-0c75-39e3-8224-b0d5143786b5",
+    "path" : "\/Library\/Developer\/PrivateFrameworks\/CoreSimulator.framework\/Versions\/A\/Frameworks\/CoreSimDeviceIO.framework\/Versions\/A\/CoreSimDeviceIO",
+    "name" : "CoreSimDeviceIO",
+    "CFBundleVersion" : "1051.55"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64",
+    "base" : 4482224128,
+    "CFBundleShortVersionString" : "64.5",
+    "CFBundleIdentifier" : "com.apple.driver.AppleParavirtGPUMetalIOGPUFamily",
+    "size" : 356352,
+    "uuid" : "8d0f62bc-5e03-34de-9456-b92178eb336e",
+    "path" : "\/System\/Library\/Extensions\/AppleParavirtGPUMetalIOGPUFamily.bundle\/Contents\/MacOS\/AppleParavirtGPUMetalIOGPUFamily",
+    "name" : "AppleParavirtGPUMetalIOGPUFamily",
+    "CFBundleVersion" : "64.5"
+  },
+  {
+    "size" : 0,
+    "source" : "A",
+    "base" : 0,
+    "uuid" : "00000000-0000-0000-0000-000000000000"
+  },
+  {
+    "source" : "P",
+    "arch" : "x86_64h",
+    "base" : 140703201665024,
+    "size" : 279436,
+    "uuid" : "3d3e4632-64dd-3015-a0a8-ccd98d931065",
+    "path" : "\/usr\/lib\/libobjc.A.dylib",
+    "name" : "libobjc.A.dylib"
+  }
+],
+  "sharedCache" : {
+  "base" : 140703157485568,
+  "size" : 30064771072,
+  "uuid" : "21fb8708-fc8e-3765-be8c-65d612cdf049"
+},
+  "vmSummary" : "\n                                VIRTUAL   REGION \nREGION TYPE                        SIZE    COUNT (non-coalesced) \n===========                     =======  ======= \nshared memory                        8K        2 \n===========                     =======  ======= \nTOTAL                                8K        2 \n",
+  "legacyInfo" : {
+  "threadTriggered" : {
+
+  }
+},
+  "bug_type" : "309",
+  "roots_installed" : 0,
+  "trmStatus" : 2105856,
+  "reportNotes" : [
+  "Corpse is incomplete (_dyld_process_info_create failed with 5)",
+  "Backtraces may be be unvailable or truncated to only leaf frames, and the binary image list may not be available"
+]
+}

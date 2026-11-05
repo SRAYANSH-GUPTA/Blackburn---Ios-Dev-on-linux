@@ -38,7 +38,7 @@ cenv() {  # the environment every container process gets
     -e "MACBOX_RENDER_NODE=$MACBOX_RENDER_NODE" -e "MACBOX_RESOLUTION=$MACBOX_RESOLUTION" \
     -e "MACBOX_SCREEN_PORT=$MACBOX_SCREEN_PORT"
   local v
-  for v in MACBOX_STREAM_ORIGINS MACBOX_STREAM_BITRATE MACBOX_STREAM_TITLE MACBOX_BUILD_JOBS; do
+  for v in MACBOX_STREAM_ORIGINS MACBOX_STREAM_BITRATE MACBOX_STREAM_TITLE MACBOX_BUILD_JOBS MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL CARGO_BUILD_JOBS NINJAFLAGS; do
     [ -n "${!v:-}" ] && printf '%s\n' -e "$v=${!v}"
   done
   return 0
@@ -185,7 +185,7 @@ EOF
   [ -f "$RUN/resolution" ] || echo "$MACBOX_RESOLUTION" >"$RUN/resolution"
   [ -f "$RUN/mac" ] || printf '52:54:00:%02x:%02x:%02x\n' $((RANDOM % 256)) $((RANDOM % 256)) $((RANDOM % 256)) >"$RUN/mac"
   mkdir -p -m 700 "$HOME/.ssh"
-  [ -f "$KEY" ] || { ssh-keygen -q -t ed25519 -N "" -C "macbox@$(hostname -s)" -f "$KEY"; say "ssh key: $KEY"; }
+  [ -f "$KEY" ] || { ssh-keygen -q -t ed25519 -N "" -C "macbox@$(uname -n)" -f "$KEY"; say "ssh key: $KEY"; }
   local cfg="$HOME/.ssh/config" tmp
   touch "$cfg"; chmod 600 "$cfg"
   tmp=$(mktemp)

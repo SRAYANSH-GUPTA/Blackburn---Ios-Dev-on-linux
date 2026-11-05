@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Blackburn: iOS Simulator (xcross DAP)",
+      "type": "dart",
+      "request": "launch",
+      "debuggerType": "dart",
+      "program": "lib/main.dart",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "XCROSS": "true",
+        "XCROSS_SIMULATOR_HOST": "blackburn-sim",
+        "XCROSS_SIMULATOR_ARCH": "x86_64"
+      },
+      "args": [
+        "--target-platform",
+        "simulator",
+        "--udid",
+        "REPLACE_WITH_SIMULATOR_UUID",
+        "--debug"
+      ]
+    }
+  ]
+}

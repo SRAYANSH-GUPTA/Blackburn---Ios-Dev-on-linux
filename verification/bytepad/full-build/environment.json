@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-11-04T17:13:08.020052+00:00",
+  "swift": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: x86_64-unknown-linux-gnu\n",
+  "dart": "Dart SDK version: 3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"linux_x64\"\n",
+  "clang": "clang version 23.1.4\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+  "ld64": "LLD 23.1.4\n",
+  "uname": "Linux archlinux 7.2.11-arch1-1 #1 SMP PREEMPT_DYNAMIC Fri, 16 Oct 2026 00:28:58 +0000 x86_64 GNU/Linux\n",
+  "swift-sdk.json": {
+    "schemaVersion": "4.0",
+    "targetTriples": {
+      "arm64-apple-ios": {
+        "sdkRootPath": "Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.1.sdk",
+        "swiftResourcesPath": "Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift",
+        "swiftStaticResourcesPath": "Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift_static",
+        "includeSearchPaths": [
+          "Developer/Platforms/iPhoneOS.platform/Developer/usr/lib",
+          "Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.1.sdk/usr/include/c++/v1"
+        ],
+        "librarySearchPaths": [
+          "Developer/Platforms/iPhoneOS.platform/Developer/usr/lib"
+        ],
+        "toolsetPaths": [
+          "toolset.json"
+        ]
+      },
+      "arm64-apple-ios-simulator": {
+        "sdkRootPath": "Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk",
+        "swiftResourcesPath": "Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift",
+        "swiftStaticResourcesPath": "Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift_static",
+        "includeSearchPaths": [
+          "Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib",
+          "Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk/usr/include/c++/v1"
+        ],
+        "librarySearchPaths": [
+          "Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib"
+        ],
+        "toolsetPaths": [
+          "toolset.json"
+        ]
+      },
+      "x86_64-apple-ios-simulator": {
+        "sdkRootPath": "Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk",
+        "swiftResourcesPath": "Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift",
+        "swiftStaticResourcesPath": "Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift_static",
+        "includeSearchPaths": [
+          "Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib",
+          "Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk/usr/include/c++/v1"
+        ],
+        "librarySearchPaths": [
+          "Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib"
+        ],
+        "toolsetPaths": [
+          "toolset.json"
+        ]
+      }
+    }
+  },
+  "xcross-host-toolchain.json": {
+    "swift": "/usr/lib/swift/usr/bin/swift-driver",
+    "version": "Swift version 6.4.2 (swift-6.4.2-RELEASE)"
+  }
+}

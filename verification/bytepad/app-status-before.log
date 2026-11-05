@@ -1,0 +1,5 @@
+$ git status --short
+ M pubspec.yaml
+?? articles/
+
+[exit 0]

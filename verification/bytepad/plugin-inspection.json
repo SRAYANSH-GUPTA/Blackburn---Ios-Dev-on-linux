@@ -1,0 +1,128 @@
+[
+  {
+    "name": "connectivity_plus",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/connectivity_plus-7.2.0/ios/connectivity_plus/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/connectivity_plus-7.2.0/ios/connectivity_plus.podspec"
+    ]
+  },
+  {
+    "name": "firebase_core",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/firebase_core-4.12.1/ios/firebase_core/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/firebase_core-4.12.1/ios/firebase_core.podspec"
+    ]
+  },
+  {
+    "name": "firebase_crashlytics",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/firebase_crashlytics-5.2.6/ios/firebase_crashlytics/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/firebase_crashlytics-5.2.6/ios/firebase_crashlytics.podspec"
+    ]
+  },
+  {
+    "name": "flutter_secure_storage_darwin",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/flutter_secure_storage_darwin-0.3.2/darwin/flutter_secure_storage_darwin/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/flutter_secure_storage_darwin-0.3.2/darwin/flutter_secure_storage_darwin.podspec"
+    ]
+  },
+  {
+    "name": "package_info_plus",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/package_info_plus-9.0.1/ios/package_info_plus/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/package_info_plus-9.0.1/ios/package_info_plus.podspec"
+    ]
+  },
+  {
+    "name": "path_provider_foundation",
+    "native_build": false,
+    "swift_packages": [],
+    "podspecs": []
+  },
+  {
+    "name": "pdfium_flutter",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/pdfium_flutter-0.2.3/darwin/pdfium_flutter/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/pdfium_flutter-0.2.3/darwin/pdfium_flutter.podspec"
+    ]
+  },
+  {
+    "name": "share_plus",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/share_plus-12.0.2/ios/share_plus/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/share_plus-12.0.2/ios/share_plus.podspec"
+    ]
+  },
+  {
+    "name": "shared_preferences_foundation",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/shared_preferences_foundation-2.5.6/darwin/shared_preferences_foundation/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/shared_preferences_foundation-2.5.6/darwin/shared_preferences_foundation.podspec"
+    ]
+  },
+  {
+    "name": "sqflite_darwin",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/sqflite_darwin-2.4.3+1/darwin/sqflite_darwin/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/sqflite_darwin-2.4.3+1/darwin/sqflite_darwin.podspec"
+    ]
+  },
+  {
+    "name": "url_launcher_ios",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/url_launcher_ios-6.4.1/ios/url_launcher_ios/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/url_launcher_ios-6.4.1/ios/url_launcher_ios.podspec"
+    ]
+  },
+  {
+    "name": "video_player_avfoundation",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/video_player_avfoundation-2.11.0/darwin/video_player_avfoundation/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/video_player_avfoundation-2.11.0/darwin/video_player_avfoundation.podspec"
+    ]
+  },
+  {
+    "name": "wakelock_plus",
+    "native_build": true,
+    "swift_packages": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/wakelock_plus-1.5.2/ios/wakelock_plus/Package.swift"
+    ],
+    "podspecs": [
+      "/home/srayansh/.pub-cache/hosted/pub.dev/wakelock_plus-1.5.2/ios/wakelock_plus.podspec"
+    ]
+  }
+]

@@ -1,0 +1,5 @@
+$ setup-macbox with df fixture: 65 GiB available
+MISSING: at least 150 GiB free for macbox setup; 68157440 KiB available on /tmp/blackburn-check-8thin35q/vm
+Free disk space before running setup-macbox.
+
+[exit 1]

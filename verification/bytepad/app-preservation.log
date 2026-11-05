@@ -1,0 +1,2 @@
+$ rsync -arcn --delete --out-format=%i %n --exclude=/build/ --exclude=/.git/ /tmp/blackburn-bytepad-backup/ /home/srayansh/Documents/company repos/sdc-si/BYTEPAD_Flutter_2027/
+MATCH: all files and symlinks identical to pre-test snapshot.

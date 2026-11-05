@@ -1,0 +1,8 @@
+$ MACBOX_CONFIG=~/.config/macbox/blackburn.env ./macbox/macbox init
+config: /home/srayansh/.config/macbox/blackburn.env (written; edit it before macbox create)
+./macbox/macbox: line 188: hostname: command not found
+ssh key: /home/srayansh/.ssh/macbox_ed25519
+ssh: Host macbox in ~/.ssh/config
+next: macbox doctor
+
+[exit 0]
