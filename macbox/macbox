@@ -301,7 +301,9 @@ cmd_up() {
   rm -f "$RUN/stopping"
   container_start
   local wd
-  if in_c test -S /tmp/host-wayland/wayland-0; then
+  if [ "${MACBOX_HEADLESS:-false}" = true ]; then
+    wd="" # Offscreen Reims: no host compositor or capture services.
+  elif [ "$(view)" = local ] && in_c test -S /tmp/host-wayland/wayland-0; then
     wd=/tmp/host-wayland/wayland-0
     in_c mkdir -p -m 700 /tmp/xdg   # the window's XDG_RUNTIME_DIR (vm.toml), which sway makes otherwise
   else
@@ -316,7 +318,8 @@ cmd_up() {
   if [ -n "$MACBOX_CPUSET" ] && [ -n "$pid" ]; then
     taskset -apc "$MACBOX_CPUSET" "$pid" >/dev/null 2>&1 || warn "couldn't pin QEMU to $MACBOX_CPUSET (taskset); it runs unpinned"
   fi
-  if [ "$wd" = /tmp/host-wayland/wayland-0 ]; then say "macOS is up in a window on this desktop (click into it to capture the keyboard; Ctrl+Alt+Super releases it)"
+  if [ "${MACBOX_HEADLESS:-false}" = true ]; then say "macOS is up offscreen (no viewer)"
+  elif [ "$wd" = /tmp/host-wayland/wayland-0 ]; then say "macOS is up in a window on this desktop (click into it to capture the keyboard; Ctrl+Alt+Super releases it)"
   else say "macOS is up. Screen: http://127.0.0.1:$MACBOX_SCREEN_PORT/ (local only; see docs/setup.md to reach it from elsewhere)"; fi
   say "SSH: ssh $MACBOX_SSH_HOST (once Remote Login is on)"
 }

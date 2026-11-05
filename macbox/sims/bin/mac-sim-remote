@@ -62,7 +62,9 @@ for devs in json.load(sys.stdin)["devices"].values():
   boot)
     u="$1"
     # Simulator.app opens a window per booted simulator: double the GPU work. Nothing here needs it.
-    pgrep -qf "Simulator.app/Contents/MacOS/Simulator" && osascript -e 'quit app "Simulator"' >/dev/null 2>&1
+    if [ "${MAC_SIM_KEEP_SIMULATOR_APP:-0}" != 1 ]; then
+      pgrep -qf "Simulator.app/Contents/MacOS/Simulator" && osascript -e 'quit app "Simulator"' >/dev/null 2>&1
+    fi
     booted "$u" || xcrun simctl boot "$u" 2>&1 | grep -v "current state: Booted" >&2
     xcrun simctl bootstatus "$u" -b >/dev/null 2>&1 || die "simulator $u did not finish booting" ;;
   shutdown)

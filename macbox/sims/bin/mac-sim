@@ -92,7 +92,7 @@ SSH=(ssh -o ControlMaster="${MAC_SIM_SSH_MASTER:-auto}" -o ControlPath="$STATE_D
   -o ServerAliveInterval=30 -o ConnectTimeout=10 "$HOST")
 on_mac() { "${SSH[@]}" "$@"; }
 # remote <subcommand> <args...>: the Mac-side helper, arguments quoted for its shell.
-remote() { on_mac "MAC_SIM_LIB=~/$REMOTE_DIR MAC_SIM_AD_VERSION=$(printf '%q' "$AD_VERSION") $REMOTE $(printf '%q ' "$@")"; }
+remote() { on_mac "MAC_SIM_KEEP_SIMULATOR_APP=$(printf '%q' "${MAC_SIM_KEEP_SIMULATOR_APP:-0}") MAC_SIM_LIB=~/$REMOTE_DIR MAC_SIM_AD_VERSION=$(printf '%q' "$AD_VERSION") $REMOTE $(printf '%q ' "$@")"; }
 
 SYNCED=""
 sync_remote() {

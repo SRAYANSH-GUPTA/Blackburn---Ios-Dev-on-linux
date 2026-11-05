@@ -2,7 +2,7 @@
 # Run on Linux after the macOS guest becomes reachable over SSH.
 # Work around compressed Metal-plugin page-in failures without changing the SSV.
 set -euo pipefail
-ssh macbox /bin/bash -s <<'GUEST'
+ssh -o BatchMode=yes -o ConnectTimeout=10 "${BLACKBURN_SSH_ALIAS:-${MACBOX_SSH_HOST:-macbox}}" /bin/bash -s <<'GUEST'
 set -euo pipefail
 plugin=/System/Library/Extensions/AppleParavirtGPUMetalIOGPUFamily.bundle/Contents/MacOS/AppleParavirtGPUMetalIOGPUFamily
 # A complete sequential read preceded successful simctl calls during recovery.
