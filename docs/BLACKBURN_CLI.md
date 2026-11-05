@@ -318,3 +318,103 @@ Phase 3 remains **experimental** until live Simulator.app-closed navigation,
 30-minute soak/network-interruption recovery, helper/Xcode/runtime compatibility,
 and measured RAM/CPU/frame-pacing comparisons against Phase 2 are archived. Unit
 and integration tests with a simulated bridge do not certify those release gates.
+
+## IDE configuration and F5 preflight (Phase 4)
+
+Install the Dart/Flutter VS Code extensions, the Dart SDK, and the simulator-capable
+`xcross` executable on the Linux extension host's PATH. `blackburn` must also be on
+that PATH. VS Code Remote uses the remote Linux extension host's installation.
+Use this checkout's xcross implementation: its DAP forwards launch environment
+variables, consumes simulator flags from `args`, and recognizes the simulator's
+forwarded `vm-service:` marker. An older installed xcross may lack these changes.
+
+```bash
+blackburn ide config --dir=/path/to/flutter_app --mode=headless
+blackburn ide config --dir=/path/to/flutter_app --mode=headless --dry-run
+blackburn ide f5 --dir=/path/to/flutter_app --mode=headless --dry-run
+blackburn ide f5 --dir=/path/to/flutter_app --mode=headless --json
+blackburn ide status --dir=/path/to/flutter_app --json
+```
+
+`--dir` defaults to the current directory, which must contain a Flutter
+`pubspec.yaml`. Mode aliases and config/environment precedence match `up`.
+`config` generates `.vscode/launch.json`, `tasks.json`, `settings.json`, and
+`blackburn_dap.dart`. It merges the named Blackburn launch/task entries, retains
+other configurations and settings, and preserves extra fields in managed entries.
+JSONC comments and trailing commas are accepted. Changed files are normalized to
+JSON, with the first original retained as `.blackburn-backup` (including comments).
+Malformed files, symlinks, non-array task/configuration lists, existing unrelated
+adapter settings, and an unrelated file at the shim path fail before writes.
+Resolve adapter-setting conflicts explicitly before retrying. Generation is
+idempotent; changing `--mode` updates the managed task and launch environment.
+Dry-run emits a JSON plan without writes, provider calls, leases, or builds.
+
+Open the Flutter project folder in VS Code. Select **Blackburn: iOS Simulator
+(xcross DAP)** in Run and Debug and press F5. The launch uses `type: dart` and
+`debuggerType: dart` to select the custom adapter without relying on stock Flutter's
+Linux iOS device discovery. Both Dart adapter settings point to the generated
+source shim, which delegates to `xcross flutter dap`; unmarked launches remain
+routed by xcross to its stock adapter path.
+
+The pre-launch task invokes `blackburn ide f5` with the configured mode and project
+path. It acquires the CLI operation lock, ensures the VM/profile is compatible,
+checks endpoint architecture, verifies the Metal prewarm barrier, leases/boots the
+simulator through mac-sim, and waits for `simctl bootstatus` on that explicit UDID.
+Provider processes run in the selected project directory so mac-sim's checkout
+claim resolves correctly. Profile conflicts return the existing resource/restart
+errors; this command never grants restart permission. Direct iOS is rejected.
+Preflight diagnostics go to stderr; `--json` emits one launch-result object.
+Human output supplies exported environment variables and a shell-quoted run line.
+
+Preflight writes a private `.dart_tool/blackburn/launch.json` containing the leased
+device, launch environment, and argv. The shim reads it when the DAP launch arrives,
+replaces `__BLACKBURN_LEASED_UDID__`, and applies the resolved endpoint environment.
+No UUID needs editing in launch.json. Failed readiness removes the previous launch
+record before starting lifecycle work. xcross then owns compilation, deployment,
+the app, authenticated loopback VM-service forwarding, and hot reload/restart.
+The separate **Blackburn: build simulator** task runs
+`xcross flutter build --target-platform simulator --debug` after preflight for
+manual build verification; F5 lets xcross's run path perform its own build.
+
+For a remote Mac, configure the verified simulator architecture before offline
+configuration generation (Intel `x86_64`, Apple Silicon `arm64`):
+
+```bash
+blackburn config set endpoints.lan_mac.ssh_alias my-mac
+blackburn config set endpoints.lan_mac.architecture arm64
+blackburn ide config --dir=/path/to/flutter_app --mode=hybrid
+```
+
+An `auto` architecture is probed by real `ide f5`; offline config/dry-run requires
+an explicit architecture. The selected architecture must match the observed Mac
+host architecture. Hybrid prepares the remote simulator without allocating local
+QEMU RAM or prewarming Apple's VM-specific graphics plugin. Remote stream/viewer
+setup remains separate.
+
+The shim forwards DAP frames with byte-counted UTF-8 framing and records DAP
+`output` event text under `.dart_tool/blackburn/xcross.log`. This log can include
+VM authentication tokens; preflight creates it with mode 0600 and resets it for
+the next debug session. `ide status` checks the managed VS Code entries and shim,
+parses forwarded `vm-service:` / `BLACKBURN_READY` markers, retains the exact auth
+path/query, deduplicates endpoints, and probes their authenticated WebSocket
+handshakes. Raw engine HTTP announcements refer to guest ports and are ignored.
+Saved endpoints with failed handshakes are reported as unreachable, not active.
+Tunnel process ownership is unverified; xcross owns it. Status reports configuration
+health separately from an active debug connection and does not boot/prewarm.
+
+Restarting viewer transitions emit versioned JSONL `session.restarting` and
+`debug.invalidated` events on stderr with reason, UDID, and `reattach_required`.
+Editors can consume these notifications; automatic debugger reconnect and
+breakpoint reapplication are not implemented in this CLI slice. Stop debugging
+through xcross's adapter; the shim only terminates its own adapter child on
+cancellation and never stops the VM or releases a persistent simulator itself.
+
+Tests exercise generated JSONC merges/idempotence, conflict refusal, dry-run,
+mocked local/hybrid readiness and failures, forwarded-service discovery and live
+WebSocket reachability, plus the generated Dart shim against a fragmented fake
+DAP child (when Dart/Python are installed). These checks do not certify real F5
+breakpoints, exceptions, source mapping, widget hot reload, Inspector/toolbar
+support, network recovery, or xcross app/tunnel cleanup. Validate those on the
+installed xcross and each supported mode before claiming Phase 4 certification.
+A VS Code session selector/status extension and native LLDB integration remain
+separate work; this change supplies the CLI/configuration bridge.
