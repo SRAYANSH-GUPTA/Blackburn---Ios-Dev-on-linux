@@ -62,6 +62,7 @@ Our goal is to make full **iOS app development (compilation, linking, signing, r
    - **Verified Simulator Screenshot**: [`bytepad_success.png`](file:///home/srayansh/.gemini/antigravity/brain/dc8edf1c-e0c0-4177-8dc0-1756acfebf93/bytepad_success.png)
 6. **Master Operational Manual**: [`docs/BLACKBURN_IOS_DEVELOPMENT_MANUAL.md`](file:///home/srayansh/Documents/Golang/Blackburn/docs/BLACKBURN_IOS_DEVELOPMENT_MANUAL.md) — 688 lines, comprehensive end-to-end runbook, issue root causes, architecture, commands, and RAM optimization.
 7. **Multi-Mode Developer Kit Architecture & Implementation Plan**: [`docs/BLACKBURN_MULTI_MODE_KIT_PLAN.md`](file:///home/srayansh/Documents/Golang/Blackburn/docs/BLACKBURN_MULTI_MODE_KIT_PLAN.md) — 646 lines, product architecture, 5 operational presets, unified `blackburn` CLI, decoupled viewers, RAM quotas, and phased roadmap.
+8. **Phase 1 Implementation (Unified `blackburn` CLI & Profile Engine)**: Branch [`feat/blackburn-cli-profiles`](file:///home/srayansh/Documents/Golang/Blackburn/docs/BLACKBURN_CLI.md) — Go CLI & config package, `~/.local/bin/blackburn`, 37 unit/integration tests with race detection, TOML preset management, and status/doctor diagnostics.
 
 
 
