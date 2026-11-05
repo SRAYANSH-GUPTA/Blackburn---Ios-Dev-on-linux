@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 )
 
+// IDE configuration and F5 preflight are dispatched through the shared App.
 // Lifecycle and mutation verbs share the operation lock. The simulator streamer
 // observes its device lease without holding that lock while clients are attached.
 func main() {

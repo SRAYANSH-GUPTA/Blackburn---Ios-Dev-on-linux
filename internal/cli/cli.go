@@ -200,7 +200,7 @@ func parse(name string, args []string, setup func(*flag.FlagSet)) (*flag.FlagSet
 }
 func (a *App) dispatch(args []string) error {
 	if len(args) == 0 || args[0] == "help" || args[0] == "--help" || args[0] == "-h" {
-		fmt.Fprintln(a.Out, "Usage: blackburn view list|get|set VIEWER [--allow-restart]|detach\n       blackburn mode [list|get|set PRESET]\n       blackburn up [--mode=PRESET]\n       blackburn down [--timeout=120s]\n       blackburn status [--json]\n       blackburn doctor [--mode=PRESET] [--json]\n       blackburn sim <up|shot|install|run|status|down|stream|touch|tap|key|text> [arguments]\n       blackburn config <get KEY|set KEY VALUE|show|validate>\nPresets: headless (agent), stream, studio (local), hybrid (remote), direct")
+		fmt.Fprintln(a.Out, "Usage: blackburn ide <config|f5|status> [--dir=DIR] [--mode=PRESET] [--dry-run] [--json]\n       blackburn view list|get|set VIEWER [--allow-restart]|detach\n       blackburn mode [list|get|set PRESET]\n       blackburn up [--mode=PRESET]\n       blackburn down [--timeout=120s]\n       blackburn status [--json]\n       blackburn doctor [--mode=PRESET] [--json]\n       blackburn sim <up|shot|install|run|status|down|stream|touch|tap|key|text> [arguments]\n       blackburn config <get KEY|set KEY VALUE|show|validate>\nPresets: headless (agent), stream, studio (local), hybrid (remote), direct")
 		return nil
 	}
 	env, legacyErr := LegacyEnv(a.Env)
@@ -214,6 +214,9 @@ func (a *App) dispatch(args []string) error {
 	}
 	cmd := args[0]
 	args = args[1:]
+	if cmd == "ide" {
+		return a.ide(c, args)
+	}
 	if cmd == "view" {
 		return a.view(args)
 	}

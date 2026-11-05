@@ -2,7 +2,8 @@ package cli
 
 import (
 	"blackburn/internal/config"
-	"fmt"
+	"blackburn/internal/ide"
+	"encoding/json"
 )
 
 // TransitionPlan describes changes to execution, independent of viewer attachment.
@@ -39,7 +40,9 @@ func PlanTransition(from, to config.Profile) (TransitionPlan, error) {
 // restartView never uses the legacy provider down command (which can force-stop).
 // Device data and installed apps persist; process memory and debugger ports do not.
 func (a *App) restartView(old Session, target config.Profile) error {
-	fmt.Fprintln(a.Err, "session.restarting: debugger connection invalidated; restoring persistent simulator data")
+	for _, event := range ide.RestartEvents("viewer transition requires guest restart", old.Device) {
+		_ = json.NewEncoder(a.Err).Encode(event)
+	}
 	if old.Device != "" {
 		if _, e := a.ssh(old.Endpoint, "xcrun simctl shutdown "+quote(old.Device)); e != nil {
 			return e
