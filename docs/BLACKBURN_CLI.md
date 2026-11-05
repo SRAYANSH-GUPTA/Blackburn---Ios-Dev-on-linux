@@ -201,3 +201,120 @@ callback guard, patch application, and Rust compilation. Native close with a rea
 app/debug tunnel, host Wayland loss, Sway failure, encoder reconnect, and graphics
 soak tests require a rebuilt hardware VM before studio can be certified. The CLI
 capability marker identifies the patch set; it does not claim hardware certification.
+
+## Experimental simulator-only viewer (Phase 3)
+
+```bash
+blackburn up --mode=headless
+blackburn sim up
+blackburn sim stream --port=6082 --fps=30
+# Open http://127.0.0.1:6082/ in a browser.
+```
+
+`sim stream` serves an HTML5 canvas over HTTP and WebSocket on **loopback only**.
+It captures the leased CoreSimulator screen directly, without launching
+Simulator.app or capturing the macOS desktop. The iOS status bar/system UI may
+still appear: “app-only” means simulator framebuffer rather than desktop capture,
+not cropping iOS content. Stop with Ctrl+C. Stopping the streamer, closing the
+browser, or losing its connection does not shut down the VM, app, or simulator.
+The browser reconnects automatically. The command observes the simulator lease
+without holding the CLI operation lock, so other interaction commands remain
+available. Lease loss invalidates capture and input; restart the stream after
+acquiring a new lease.
+
+The default backend polls `xcrun simctl io UDID screenshot --type=png -` over SSH.
+`--fps` is a **capture rate limit**, between 1 and 60, not a promised delivery rate.
+Screenshot process startup, readback, PNG encoding, SSH, and browser decoding
+usually prevent 30 FPS. This is a functional screenshot fallback, not a certified
+low-latency display subscription, hardware encoder, H.264 stream, or zero-copy
+path. The existing desktop viewer remains available through `blackburn view`.
+No view transition happens automatically.
+
+The default backing scale is 1 for `slim-1x` devices. Use `--scale=2` or `--scale=3`
+when the simulator's screenshot pixels are 2x or 3x its logical point dimensions.
+The server derives the current oriented image dimensions from PNG headers and
+maps canvas coordinates through aspect-fit letterboxing and the selected scale.
+Rotation, dimension changes, or capture failure/recovery advance the stream epoch;
+input referring to an earlier epoch is rejected. Viewport coordinates are CSS
+pixels, independent of the browser's device pixel ratio.
+
+Click/touch the canvas to tap, drag to swipe between the gesture endpoints, and
+focus the canvas to type. Drag is forwarded as one simulator swipe on pointer
+release, not a continuous multi-touch HID subscription. The text field sends
+Unicode text to the simulator's focused field. Home, Enter/Return, Backspace,
+Tab, and individual characters are forwarded through agent-device; other key names
+return an unsupported-key error. Keyboard behavior depends on the guest backend
+and focused control, and agent-device failures are displayed in the viewer.
+
+```bash
+blackburn sim touch 120 240              # logical simulator points
+blackburn sim tap 'label="Save"'         # agent-device selector or snapshot ref
+blackburn sim tap @e1
+blackburn sim key home
+blackburn sim key Enter
+blackburn sim text 'Hello from Linux'
+```
+
+These commands require an active Blackburn simulator lease (`sim up`) and the
+repository's `mac-sim` / `mac-sim-remote` agent-device setup on the selected guest
+(`macbox/sims/bin/mac-sim setup`). Input uses that bridge's pinned agent-device
+version (currently 0.21.31), selected UDID, and isolated session. It does not invent
+`simctl touch` or `simctl key` commands. Selectors and snapshot refs follow
+[agent-device's command contract](https://agent-device.dev/docs/commands).
+
+Each viewer has a queue of at most **two frames**, dropping the oldest pending
+frame on overflow. Browser presentation acknowledgements permit only one frame
+in flight per socket; a nonresponsive viewer is disconnected after ten seconds.
+Capture pauses when no viewers are connected. The first eligible connection gets
+control; other viewers are read-only. A controller disconnect releases control;
+a waiting viewer reconnects to acquire it. CLI input is separately authorized by
+the local user and does not participate in browser controller arbitration.
+
+The HTTP listener validates loopback Host and same-origin requests. Generated
+video/control credentials are separate, scoped to this server process, and
+embedded in its local viewer. Do not publish this listener through a reverse
+proxy: LAN/TLS authentication and remote controller credentials are not implemented.
+The capture path never reads or writes the clipboard.
+
+Endpoints and wire contract:
+
+- `GET /`: embedded viewer; no external assets or dependencies.
+- `GET /health`: version, experimental flag, PNG codec, FPS limit, viewer count,
+  current sequence/epoch, queued/dropped frame counts, and last capture error.
+- `GET /frame?token=VIDEO_TOKEN`: latest PNG; 503 until a viewer causes capture,
+  or while capture has failed. Credentials come from the local viewer page.
+- `GET /ws?token=VIDEO_TOKEN&control=CONTROL_TOKEN`: protocol v1 JSON messages.
+  `hello` identifies controller ownership. `frame` contains base64 PNG, device,
+  oriented backing width/height, scale, rotation, epoch, sequence, and host-clock
+  capture/delivery timestamps. The client sends `{"type":"ack"}` after rendering
+  and `{"type":"ping"}` at least every 30 seconds. These timestamps are not
+  guest GPU capture/encode or browser presentation measurements; no cross-host
+  clock equivalence is assumed.
+- Input messages are `{"type":"input","input":{"type":"touch","epoch":1,
+  "x":25,"y":50,"view_width":100,"view_height":200}}`. `drag` also has `end_x`
+  and `end_y`; `tap`, `key`, and `text` carry their corresponding named field.
+  Input replies contain `ok` and an `error` when routing fails.
+
+To experiment with faster acquisition, set `BLACKBURN_FRAME_HELPER` to the absolute
+path of an installed **guest executable**. Its contract is `HELPER frame UDID`,
+returning one PNG on stdout and diagnostics on stderr; a helper can keep a
+persistent guest CoreSimulator display subscription behind that interface.
+Frames must already be oriented, match the selected backing scale, and remain
+below 32 MiB / 16384 pixels per dimension. If the helper fails or emits an invalid PNG, it is disabled for the rest of the
+process and capture falls back to simctl. The backend and warning are reported in
+frames, `/health`, and the viewer. Restart the streamer to retry the helper. A
+command timeout is retried on the next capture. With no helper configured, simctl
+is used directly. Private display APIs
+stay outside the host Go process. No private API helper or compatibility matrix is
+bundled or certified by this implementation.
+
+Validation covers bounded queue overload, concurrent producers/consumers, 1x/2x/3x
+coordinate mapping, rotations/letterboxing, guest command construction, CLI
+validation/device selection, HTTP/WebSocket authorization, input routing,
+controller contention, stale epochs, capture recovery, reconnect, and server
+cancellation. Run `go test -race -count=1 ./...`.
+
+Phase 3 remains **experimental** until live Simulator.app-closed navigation,
+30-minute soak/network-interruption recovery, helper/Xcode/runtime compatibility,
+and measured RAM/CPU/frame-pacing comparisons against Phase 2 are archived. Unit
+and integration tests with a simulated bridge do not certify those release gates.
