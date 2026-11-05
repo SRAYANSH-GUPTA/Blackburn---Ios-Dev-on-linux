@@ -69,7 +69,7 @@ say() { :; }
 ` + function + "\ncmd_up\n"
 	cmd := exec.Command("bash", "-c", script)
 	log := filepath.Join(dir, "calls")
-	cmd.Env = append(os.Environ(), "RUN="+dir, "MACBOX_HEADLESS=true", "MACBOX_VM=mac", "MACBOX_CPUSET=", "MACBOX_SSH_HOST=test-mac", "TEST_LOG="+log)
+	cmd.Env = append(os.Environ(), "RUN="+dir, "DATA="+dir, "MACBOX_HEADLESS=true", "MACBOX_VM=mac", "MACBOX_CPUSET=", "MACBOX_SSH_HOST=test-mac", "TEST_LOG="+log)
 	if b, e := cmd.CombinedOutput(); e != nil {
 		t.Fatal(e, string(b))
 	}
@@ -96,5 +96,117 @@ func TestPrewarmScriptUsesSelectedEndpoint(t *testing.T) {
 		if !strings.Contains(string(b), want) {
 			t.Fatal("missing", want, string(b))
 		}
+	}
+}
+
+// Run the actual provider functions with instrumented execution boundaries. Any
+// accidental coupling of view operations to VM lifecycle fails these tests.
+func TestViewerProviderKeepsExecutionAlive(t *testing.T) {
+	root, _ := filepath.Abs("..")
+	b, e := os.ReadFile(filepath.Join(root, "macbox/macbox"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	source := string(b)
+	start := strings.Index(source, "viewer_capable() {")
+	end := strings.Index(source[start:], "resolution() {")
+	functions := source[start : start+end]
+	for _, tc := range []struct {
+		backend, target, want string
+		ok                    bool
+	}{
+		{"local", "detach", "none", true}, {"local", "local", "native", true},
+		{"stream", "stream", "browser-desktop", true}, {"stream", "none", "none", true},
+		{"none", "stream", "none", false}, {"stream", "local", "none", false},
+	} {
+		t.Run(tc.backend+"/"+tc.target, func(t *testing.T) {
+			dir := t.TempDir()
+			log := filepath.Join(dir, "calls")
+			if e := os.MkdirAll(filepath.Join(dir, "qemu/current"), 0700); e != nil {
+				t.Fatal(e)
+			}
+			for _, name := range []string{"qemu/current/blackburn-viewer-capability", "viewer-capability"} {
+				if e := os.WriteFile(filepath.Join(dir, name), []byte("detach-v1\n"), 0600); e != nil {
+					t.Fatal(e)
+				}
+			}
+			script := `set -eu
+say() { echo "$*"; }
+die() { echo "$*" >&2; exit 1; }
+vm_running() { return 0; }
+view() { echo "$BACKEND"; }
+in_c() { echo "in_c $*" >> "$TEST_LOG"; }
+cmd_down() { echo forbidden >> "$TEST_LOG"; exit 19; }
+ctl() { echo forbidden >> "$TEST_LOG"; exit 19; }
+guest() { echo forbidden >> "$TEST_LOG"; exit 19; }
+` + functions + "\ncmd_view \"$TARGET\"\n"
+			cmd := exec.Command("bash", "-c", script)
+			cmd.Env = append(os.Environ(), "RUN="+dir, "DATA="+dir, "REPO="+root, "BACKEND="+tc.backend, "TARGET="+tc.target, "TEST_LOG="+log)
+			out, err := cmd.CombinedOutput()
+			if (err == nil) != tc.ok {
+				t.Fatal(err, string(out))
+			}
+			calls, _ := os.ReadFile(log)
+			if strings.Contains(string(calls), "forbidden") {
+				t.Fatal(string(calls))
+			}
+			if tc.ok {
+				state, _ := os.ReadFile(filepath.Join(dir, "view-state"))
+				if strings.TrimSpace(string(state)) != tc.want {
+					t.Fatal(string(state))
+				}
+			}
+		})
+	}
+}
+
+func TestAppleGraphicsCloseGuard(t *testing.T) {
+	if _, e := exec.LookPath("cc"); e != nil {
+		t.Skip("C compiler unavailable")
+	}
+	root, _ := filepath.Abs("..")
+	patch, e := os.ReadFile(filepath.Join(root, "macbox/patches/qemu/0001-guard-native-close-poweroff.patch"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	// Reconstruct the patched function from context/addition lines and execute it
+	// with a shutdown spy. This tests both detach and legacy callback behavior.
+	lines := []string{}
+	for _, line := range strings.Split(string(patch), "\n") {
+		if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
+			lines = append(lines, line[1:])
+		}
+	}
+	s := strings.Join(lines, "\n")
+	start := strings.Index(s, "static void apple_gfx_input_close(void)")
+	end := strings.Index(s[start:], "\n}") + 2
+	if start < 0 || end < 2 {
+		t.Fatal("guard function absent")
+	}
+	code := `#include <stdlib.h>
+#include <string.h>
+static int shutdown_action, calls;
+#define SHUTDOWN_ACTION_POWEROFF 1
+#define SHUTDOWN_CAUSE_HOST_UI 1
+static void qemu_system_shutdown_request(int cause) { calls++; }
+` + s[start:start+end] + `
+int main(void) {
+ setenv("REIMS_VGPU_CLOSE_POLICY", "detach", 1);
+ apple_gfx_input_close(); if (calls != 0) return 1;
+ unsetenv("REIMS_VGPU_CLOSE_POLICY");
+ apple_gfx_input_close(); return calls != 1;
+}
+`
+	dir := t.TempDir()
+	file := filepath.Join(dir, "guard.c")
+	bin := filepath.Join(dir, "guard")
+	if e := os.WriteFile(file, []byte(code), 0600); e != nil {
+		t.Fatal(e)
+	}
+	if out, e := exec.Command("cc", file, "-o", bin).CombinedOutput(); e != nil {
+		t.Fatal(e, string(out))
+	}
+	if out, e := exec.Command(bin).CombinedOutput(); e != nil {
+		t.Fatal(e, string(out))
 	}
 }

@@ -29,9 +29,16 @@ are ANV rounding a clear of a linear image by one code (0.1 → 0x19 where an op
 | 0003 port to metal2vulkan development 0db5825a | Reims's Vulkan platform on metal2vulkan's newer runtime (72 commits after the one 7198fe6 names): 3x 20.3–21.8 → 22.5–23.0 fps before 0004. Upstream made the same move later (Reims c8ec271a). |
 | 0004 upstream f6b7e927, video acceleration off | upstream's own commit, cherry-picked: `reims-ctl set --video-acceleration=false` leaves out the VideoToolbox and M2 scaler devices. macbox sets it, so the VM's devices are the ones it was measured with. |
 
+| 0005 detach native presentation | Under `REIMS_VGPU_CLOSE_POLICY=detach`, hide on SDL's UI thread, release input, and retain the surface/device. Poll VM-specific `REIMS_VGPU_VIEW_STATE` for hide/show; report native close as `none`. |
+
 ## QEMU
 
 `vendor/qemu` at bd95509 (github.com/steelbrain/qemu-reims-vgpu), the commit these builds used.
+
+`patches/qemu/0001-guard-native-close-poweroff.patch` guards the Apple graphics
+callback as well as the Reims SDL boundary. `build-reims.sh` applies both and
+records `detach-v1` only in patched builds. The marker is a build capability, not
+a completed native-close hardware acceptance test.
 
 ## Licenses
 

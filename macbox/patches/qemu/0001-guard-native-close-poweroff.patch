@@ -1,0 +1,20 @@
+From: Blackburn <blackburn@localhost>
+Subject: [PATCH] fix: guard Apple graphics close poweroff under detach policy
+
+diff --git a/hw/display/apple-gfx.c b/hw/display/apple-gfx.c
+--- a/hw/display/apple-gfx.c
++++ b/hw/display/apple-gfx.c
+@@ -437,7 +437,12 @@
+
+ static void apple_gfx_input_close(void)
+ {
+-    /* As QEMU's own windows do: closing one powers the VM off. */
++    /* Blackburn: guard the graphics callback as well as the SDL close path. */
++    const char *policy = getenv("REIMS_VGPU_CLOSE_POLICY");
++    if (policy && strcmp(policy, "detach") == 0) {
++        return;
++    }
++    /* Legacy behavior is retained outside the explicit detach policy. */
+     shutdown_action = SHUTDOWN_ACTION_POWEROFF;
+     qemu_system_shutdown_request(SHUTDOWN_CAUSE_HOST_UI);
+ }

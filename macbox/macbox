@@ -93,6 +93,41 @@ vm_exists() { [ -f "$VMDIR/vm.toml" ]; }
 vm_running() { container_up && ctl list 2>/dev/null | grep -qE "^${MACBOX_VM}[[:space:]]+running"; }
 qemu_pid() { $DOCKER top "$C" -eo pid,args 2>/dev/null | awk '/qemu-system-x86_64/ {print $1; exit}'; }
 view() { cat "$RUN/view" 2>/dev/null || echo stream; }
+# Backend binding (run/view) and attached presentation (run/view-state) are separate.
+viewer_capable() {
+  [ "$(cat "$DATA/qemu/current/blackburn-viewer-capability" 2>/dev/null)" = detach-v1 ]
+}
+viewer_running_capable() {
+  [ "$(cat "$RUN/viewer-capability" 2>/dev/null)" = detach-v1 ]
+}
+cmd_view() {
+  local target=${1:-get} backend
+  case "$target" in
+    capabilities-running) viewer_running_capable && { say detach-v1; return; }; die "running QEMU lacks native close protection" ;;
+    capabilities) viewer_capable && { say detach-v1; return; }; die "viewer patch missing: rebuild macbox" ;;
+    get) cat "$RUN/view-state" 2>/dev/null || echo none; return ;;
+    detach) target=none ;;
+    stream) target=browser-desktop ;;
+    studio|local) target=native ;;
+    none|native|browser-desktop) ;;
+    *) die "usage: macbox view get|none|stream|local|capabilities" ;;
+  esac
+  vm_running || die "VM is not running"
+  backend=$(view)
+  if [ "$target" = native ]; then
+    viewer_running_capable || die "running QEMU lacks native detach patch: graceful restart required"
+    [ "$backend" = local ] || die "RESTART_REQUIRED: native Wayland binding"
+  elif [ "$target" = browser-desktop ]; then
+    [ "$backend" = stream ] || die "RESTART_REQUIRED: private compositor binding"
+    in_c "$REPO/container/display-up.sh" >/dev/null
+  elif [ "$backend" = local ]; then
+    viewer_running_capable || die "running QEMU lacks native detach patch: graceful restart required"
+  fi
+  # Never stop Sway, the encoder, QEMU or CoreSimulator here. The SDL UI
+  # thread consumes native visibility changes and releases input capture.
+  printf '%s\n' "$target" >"$RUN/view-state.tmp"
+  mv "$RUN/view-state.tmp" "$RUN/view-state"
+}
 resolution() { cat "$RUN/resolution" 2>/dev/null || echo "$MACBOX_RESOLUTION"; }
 build_id() { readlink "$DATA/qemu/current" 2>/dev/null || true; }
 ssh_ok() { ssh -o ConnectTimeout=5 -o BatchMode=yes "$MACBOX_SSH_HOST" true >/dev/null 2>&1; }
@@ -301,16 +336,23 @@ cmd_up() {
   rm -f "$RUN/stopping"
   container_start
   local wd
-  if [ "${MACBOX_HEADLESS:-false}" = true ]; then
+  if [ "${MACBOX_HEADLESS:-false}" = true ] || [ "$(view)" = none ]; then
     wd="" # Offscreen Reims: no host compositor or capture services.
   elif [ "$(view)" = local ] && in_c test -S /tmp/host-wayland/wayland-0; then
+    viewer_capable || die "native close protection missing: run macbox build before studio"
     wd=/tmp/host-wayland/wayland-0
     in_c mkdir -p -m 700 /tmp/xdg   # the window's XDG_RUNTIME_DIR (vm.toml), which sway makes otherwise
   else
     wd=$(in_c "$REPO/container/display-up.sh" | sed -n 's/^WAYLAND_DISPLAY=//p')
   fi
   if ! vm_running; then
-    ctl set "$MACBOX_VM" --env "WAYLAND_DISPLAY=$wd" >/dev/null
+    local window=1 active=browser-desktop
+    if [ -z "$wd" ]; then window=0; active=none
+    elif [ "$wd" = /tmp/host-wayland/wayland-0 ]; then active=native; fi
+    cat "$DATA/qemu/current/blackburn-viewer-capability" >"$RUN/viewer-capability" 2>/dev/null || echo legacy >"$RUN/viewer-capability"
+    printf '%s\n' "$active" >"$RUN/view-state"
+    ctl set "$MACBOX_VM" --env "WAYLAND_DISPLAY=$wd" --env "REIMS_VGPU_WINDOW=$window" \
+      --env REIMS_VGPU_CLOSE_POLICY=detach --env "REIMS_VGPU_VIEW_STATE=$RUN/view-state" >/dev/null
     apply_tuning
     ctl start "$MACBOX_VM"
   fi
@@ -342,8 +384,8 @@ cmd_status() {
   ctl list | sed 's/^/  /'
   local pid; pid=$(qemu_pid)
   [ -n "$pid" ] && ps -o pid,pcpu,rss,etime -p "$pid" | sed 's/^/  /'
-  in_c test -S /tmp/host-wayland/wayland-0 && say "  view: local (a window on the host's desktop)" ||
-    { say "  view: stream, http://127.0.0.1:$MACBOX_SCREEN_PORT/"; in_c "$REPO/container/stream-up.sh" status | sed 's/^/  /'; }
+  say "  view: $(cmd_view get) (backend: $(view))"
+  if [ "$(view)" = stream ]; then in_c "$REPO/container/stream-up.sh" status | sed 's/^/  /'; fi
   say "  build: $(build_id)$(tuning_on && echo ', GPU tuning on' || echo ', GPU tuning off')"
   say "  screen: $(resolution)"
   ssh_ok && say "  ssh $MACBOX_SSH_HOST: ok" || say "  ssh $MACBOX_SSH_HOST: no answer"
@@ -580,7 +622,7 @@ Setup (docs/setup.md):
 
 Day to day:
   macbox up | down | status | logs [qemu|selkies|sway]
-  macbox view local|stream    the VM's window on this desktop, or in the browser stream
+  macbox view get|none|local|stream    attach/detach; compositor changes require blackburn view set
   macbox stream selkies|novnc
   macbox resolution WxH       macOS's screen size (restarts a running VM)
   macbox ssh [command]
@@ -605,12 +647,7 @@ case "$sub" in
       qemu) tail -n "${2:-50}" "$VMDIR/logs/qemu.log" ;;
       *) tail -n "${2:-50}" "$LOGS/$1.log" ;;
     esac ;;
-  view)
-    case "${1:-}" in
-      "") say "view: $(view)" ;;
-      local|stream) echo "$1" >"$RUN/view"; if container_up; then cmd_down; cmd_up; fi ;;
-      *) die "usage: macbox view [local|stream]" ;;
-    esac ;;
+  view) [ "$#" -le 1 ] || die "usage: macbox view [get|none|local|stream]"; cmd_view "${1:-get}" ;;
   stream) container_up || die "the container isn't running"; in_c "$REPO/container/stream-up.sh" "${1:-status}" ;;
   resolution)
     [[ "${1:-}" =~ ^[0-9]+x[0-9]+$ ]] || die "usage: macbox resolution WIDTHxHEIGHT"

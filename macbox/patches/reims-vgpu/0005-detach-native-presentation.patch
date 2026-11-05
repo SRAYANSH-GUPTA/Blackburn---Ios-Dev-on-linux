@@ -1,0 +1,119 @@
+From: Blackburn <blackburn@localhost>
+Subject: [PATCH] feat: detach native presentation without ending guest execution
+
+diff --git a/crates/reims-vgpu-window/src/sdl/shell.rs b/crates/reims-vgpu-window/src/sdl/shell.rs
+--- a/crates/reims-vgpu-window/src/sdl/shell.rs
++++ b/crates/reims-vgpu-window/src/sdl/shell.rs
+@@ -87,6 +87,7 @@
+     over_image: bool,
+     /// The display has ended: the window is hidden, and goes once its OS lets it go.
+     pub(crate) closed: bool,
++    detached: bool,
+     /// Whether the events of the batch SDL is handing over show the window or hide it, the last
+     /// of them, applied once the batch is over ([`batch_over`]); `None` where none said.
+     shown: Option<bool>,
+@@ -164,6 +165,7 @@
+             cursor: CursorCache::default(),
+             over_image: false,
+             closed: false,
++            detached: false,
+             shown: None,
+             released: false,
+         });
+@@ -262,6 +264,33 @@
+             shell.relayout();
+         });
+     }
++}
++
++// A VM-specific file, polled on the UI thread even while the window is hidden.
++// No signal handler touches SDL or destroys renderer resources.
++pub(crate) fn presentation_control() {
++    let Ok(path) = std::env::var("REIMS_VGPU_VIEW_STATE") else {
++        return;
++    };
++    let Ok(value) = std::fs::read_to_string(path) else {
++        return;
++    };
++    let requested = value.trim();
++    OPEN.with(|open| {
++        for shell in open.borrow_mut().iter_mut().filter(|s| !s.closed) {
++            if requested == "none" && !shell.detached {
++                shell.detach();
++            } else if (requested == "native" || requested == "browser-desktop") && shell.detached {
++                // SAFETY: SDL's owning UI thread; surface remains allocated.
++                shell.detached = false;
++                unsafe {
++                    SDL_ShowWindow(shell.sdl);
++                }
++                shell.shown = Some(true);
++                shell.window.surface().set_visible(true);
++            }
++        }
++    });
+ }
+
+ /// SDL has handed over every event it had queued: each window that an event of the batch showed
+@@ -275,7 +304,7 @@
+             if let Some(shown) = shell.shown.take()
+                 && !shell.closed
+             {
+-                shell.window.surface().set_visible(shown);
++                shell.window.surface().set_visible(shown && !shell.detached);
+             }
+         }
+     });
+@@ -386,7 +415,33 @@
+             "window {:?}: closed by the person",
+             self.window.title()
+         );
++        if std::env::var("REIMS_VGPU_CLOSE_POLICY").as_deref() == Ok("detach") {
++            self.detach();
++            if let Ok(path) = std::env::var("REIMS_VGPU_VIEW_STATE") {
++                let pending = format!("{path}.closed");
++                if std::fs::write(&pending, "none\n").is_ok() {
++                    let _ = std::fs::rename(pending, path);
++                }
++            }
++            log::info!(target: "reims_vgpu_window", "viewer.closed: detached; guest retained");
++            return;
++        }
+         close_asked(self);
++    }
++
++    // Keep the window, Vulkan surface and guest device allocated. Visibility gates
++    // presentation on the render thread; destroying a live surface is unsafe.
++    fn detach(&mut self) {
++        self.detached = true;
++        self.input.close_requested();
++        self.flush();
++        self.capture_changed();
++        self.window.surface().set_visible(false);
++        self.shown = Some(false);
++        // SAFETY: this method runs on SDL's owning UI thread.
++        unsafe {
++            SDL_HideWindow(self.sdl);
++        }
+     }
+
+     /// Sends what the input queued to the host's callbacks, while the window has them.
+diff --git a/crates/reims-vgpu-window/src/native/linux/ui.rs b/crates/reims-vgpu-window/src/native/linux/ui.rs
+--- a/crates/reims-vgpu-window/src/native/linux/ui.rs
++++ b/crates/reims-vgpu-window/src/native/linux/ui.rs
+@@ -45,7 +45,7 @@
+ const FIRST_SNAPSHOT: Duration = Duration::from_secs(1);
+
+ /// How long the UI thread waits in SDL at most before it looks at its work again, in ms.
+-const WAIT_MS: i32 = 1000;
++const WAIT_MS: i32 = 100;
+
+ /// Work for the UI thread.
+ type Job = Box<dyn FnOnce() + Send>;
+@@ -227,6 +227,7 @@
+     QUEUE.lock().phase = Phase::Running;
+     loop {
+         run_jobs();
++        crate::sdl::shell::presentation_control();
+         // SAFETY: an all-zero event is a valid one for SDL to fill.
+         let mut event: SDL_Event = unsafe { std::mem::zeroed() };
+         // SAFETY: SDL's video runs on this thread.

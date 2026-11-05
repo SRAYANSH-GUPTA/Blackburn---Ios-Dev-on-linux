@@ -74,6 +74,7 @@ else
   git -C "$R" submodule update -q --init --depth 1 vendor/qemu
   git -C "$R/vendor/qemu" fetch -q --depth 1 origin "$QEMU_REF" 2>/dev/null || true
   git -C "$R/vendor/qemu" checkout -q -f --detach "$QEMU_REF"
+  apply "$R/vendor/qemu" "$MACBOX_REPO/patches/qemu"
   SUFFIX=-macbox
 fi
 COMMIT=$(git -C "$R" rev-parse --short HEAD)
@@ -121,6 +122,9 @@ find "$STAGE/reims-ctl-qemu" -name ReimsVgpu.rom -type f | grep -q . || { echo "
 ID="$(date +%Y%m%d-%H%M%S)-$COMMIT$SUFFIX"
 mv "$STAGE/reims-ctl-qemu" "$DATA/qemu/$ID"
 rm -rf "$STAGE"
+if [ "$UPSTREAM" = 0 ]; then
+  echo detach-v1 >"$DATA/qemu/$ID/blackburn-viewer-capability"
+fi
 if [ "$SWITCH" = 1 ] || [ ! -e "$DATA/qemu/current" ]; then
   ln -sfn "$ID" "$DATA/qemu/current"
   say "QEMU installed as qemu/$ID (now qemu/current)"
