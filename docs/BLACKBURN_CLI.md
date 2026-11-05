@@ -149,3 +149,55 @@ certification remain the plan's hardware acceptance gates. Doctor inventory alon
 is not proof of toolchain or rendering compatibility. A failed start retains the
 VM disk, settings backup, and last successful session stage for diagnosis; automatic
 rollback/recovery is not implemented. Graceful shutdown timeout always retains the VM.
+
+## Independent viewers (Phase 2)
+
+```bash
+blackburn view list
+blackburn view get
+blackburn view set stream
+blackburn view set native --allow-restart
+blackburn view detach
+```
+
+Targets are `none`, `browser-desktop` (`stream`), and `native` (`studio`, `local`).
+`set` changes presentation on the current managed local session and retains its
+memory, vCPU, display resolution, endpoint, and simulator lease. It does not apply
+another mode's resource preset or change the saved default mode. Remote and direct
+providers currently reject viewer control. `get` and `status` read provider state;
+client connection counts and actual delivered frames are not inferred from it.
+
+Detach and reattach to the existing compositor are live operations. Detaching keeps
+QEMU, CoreSimulator, private Sway, and the stream service alive. Browser connections
+do not own those processes; the supported video transport remains WebSocket.
+Switching between native and private Sway, or realizing an offscreen window,
+returns `RESTART_REQUIRED` (exit 6) unless `--allow-restart` is supplied. The planner
+also treats memory/vCPU/display changes as restart-only operations.
+
+A restart shuts down the leased simulator and guest gracefully, waits for QEMU to
+stop, applies settings, prewarms Metal, then boots and waits for the same UDID.
+Installed apps and device data persist; app process memory and debugger connections
+are interrupted. Restart completion does not automatically relaunch an app because
+Phase 1 does not record its bundle identifier or own the debugger. Run `sim run`
+and reconnect the debugger as needed. A shutdown timeout retains the VM without
+forced termination. A later startup failure attempts one recovery to the previous
+profile. The operation lock serializes changes; `view-transition.json` records
+previous/desired state, restart reasons, completion, and rollback errors. Failed
+operations retain this record for diagnosis. An interrupted CLI is not automatically
+replayed by a daemon in this synchronous implementation.
+
+Native presentation requires the patched Reims and QEMU build (`macbox build`),
+which installs a `detach-v1` capability marker. Older builds are rejected before
+native startup. The running VM's capability is recorded separately so replacing
+`qemu/current` cannot certify an already-running older process. Under the detach
+policy, native close releases input, disables presentation through renderer
+visibility, and hides the SDL window on its UI thread. It retains the surface and
+GPU device. The Apple graphics close callback also suppresses host-UI shutdown.
+Reopening the same native viewer shows that retained window. Compositor loss and
+safe live migration to a different compositor remain hardware validation work.
+
+Validation here covers CLI/provider fault simulations, the executable C shutdown
+callback guard, patch application, and Rust compilation. Native close with a real
+app/debug tunnel, host Wayland loss, Sway failure, encoder reconnect, and graphics
+soak tests require a rebuilt hardware VM before studio can be certified. The CLI
+capability marker identifies the patch set; it does not claim hardware certification.

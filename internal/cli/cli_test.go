@@ -26,6 +26,8 @@ func testApp(t *testing.T) (*App, *bytes.Buffer, *[][]string) {
 		calls = append(calls, append([]string{}, args...))
 		joined := strings.Join(args, " ")
 		switch {
+		case strings.HasSuffix(joined, "view get"):
+			return "browser-desktop\n", nil
 		case strings.Contains(joined, "inspect"):
 			return "true\n", nil
 		case strings.Contains(joined, "reims-ctl list"):

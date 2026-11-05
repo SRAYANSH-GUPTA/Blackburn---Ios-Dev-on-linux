@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 )
 
+// All verbs, including transactional viewer changes, share the CLI operation lock.
 func main() {
 	root := os.Getenv("BLACKBURN_ROOT")
 	if root == "" {

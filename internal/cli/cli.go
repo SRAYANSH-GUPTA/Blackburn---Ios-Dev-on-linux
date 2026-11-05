@@ -1,4 +1,4 @@
-// Package cli implements Blackburn's Phase 1 synchronous control plane.
+// Package cli implements Blackburn's synchronous control plane.
 package cli
 
 import (
@@ -53,6 +53,7 @@ type App struct {
 	AvailableMiB         func() int64
 }
 type Session struct {
+	Viewer   string          `json:"viewer,omitempty"`
 	Mode     string          `json:"mode"`
 	Profile  config.Profile  `json:"profile"`
 	Endpoint config.Endpoint `json:"endpoint"`
@@ -199,7 +200,7 @@ func parse(name string, args []string, setup func(*flag.FlagSet)) (*flag.FlagSet
 }
 func (a *App) dispatch(args []string) error {
 	if len(args) == 0 || args[0] == "help" || args[0] == "--help" || args[0] == "-h" {
-		fmt.Fprintln(a.Out, "Usage: blackburn mode [list|get|set PRESET]\n       blackburn up [--mode=PRESET]\n       blackburn down [--timeout=120s]\n       blackburn status [--json]\n       blackburn doctor [--mode=PRESET] [--json]\n       blackburn sim <up|shot|install|run|status|down> [arguments]\n       blackburn config <get KEY|set KEY VALUE|show|validate>\nPresets: headless (agent), stream, studio (local), hybrid (remote), direct")
+		fmt.Fprintln(a.Out, "Usage: blackburn view list|get|set VIEWER [--allow-restart]|detach\n       blackburn mode [list|get|set PRESET]\n       blackburn up [--mode=PRESET]\n       blackburn down [--timeout=120s]\n       blackburn status [--json]\n       blackburn doctor [--mode=PRESET] [--json]\n       blackburn sim <up|shot|install|run|status|down> [arguments]\n       blackburn config <get KEY|set KEY VALUE|show|validate>\nPresets: headless (agent), stream, studio (local), hybrid (remote), direct")
 		return nil
 	}
 	env, legacyErr := LegacyEnv(a.Env)
@@ -213,6 +214,9 @@ func (a *App) dispatch(args []string) error {
 	}
 	cmd := args[0]
 	args = args[1:]
+	if cmd == "view" {
+		return a.view(args)
+	}
 	if cmd == "mode" || cmd == "config" {
 		unlock, e := a.lock()
 		if e != nil {
@@ -428,6 +432,11 @@ func (a *App) up(m string, p config.Profile, ep config.Endpoint, s Session) erro
 		if s.Mode != m || !reflect.DeepEqual(s.Profile, p) || s.Endpoint != ep {
 			return fail("RESTART_REQUIRED", "running VM has a different or unmanaged profile; run blackburn down before up", 6)
 		}
+		if p.Presentation == "native" {
+			if _, err := a.call(filepath.Join(a.Root, "macbox/macbox"), "view", "capabilities-running"); err != nil {
+				return fail("UNMET_PREREQUISITE", err.Error(), 3)
+			}
+		}
 		if e = a.prewarm(ep); e != nil {
 			return e
 		}
@@ -441,13 +450,11 @@ func (a *App) up(m string, p config.Profile, ep config.Endpoint, s Session) erro
 		return nil
 	}
 	if p.Presentation == "native" {
-		wayland := a.env("WAYLAND_DISPLAY", "")
-		if wayland != "" && !filepath.IsAbs(wayland) {
-			wayland = filepath.Join(a.env("XDG_RUNTIME_DIR", ""), wayland)
+		if e := a.nativeSocket(); e != nil {
+			return e
 		}
-		info, err := os.Stat(wayland)
-		if err != nil || info.Mode()&os.ModeSocket == 0 {
-			return fail("UNMET_PREREQUISITE", "studio requires the invoking user's Wayland socket", 3)
+		if _, e := a.call(filepath.Join(a.Root, "macbox/macbox"), "view", "capabilities"); e != nil {
+			return fail("UNMET_PREREQUISITE", e.Error(), 3)
 		}
 	}
 	// Cold-start admission includes 2 GiB runtime overhead and a 3 GiB host reserve.
@@ -460,6 +467,9 @@ func (a *App) up(m string, p config.Profile, ep config.Endpoint, s Session) erro
 	}
 	env := append(append([]string{}, a.Env...), "MACBOX_HEADLESS="+strconv.FormatBool(!p.Window), "MACBOX_SSH_HOST="+ep.SSH, "MACBOX_RESOLUTION="+p.Display)
 	view := "stream"
+	if !p.Window {
+		view = "none"
+	}
 	if p.Presentation == "native" {
 		view = "local"
 	}
@@ -527,6 +537,8 @@ func (a *App) applyProfile(p config.Profile) error {
 		env = map[string]any{}
 		v["extra_env"] = env
 	}
+	env["REIMS_VGPU_CLOSE_POLICY"] = "detach"
+	env["REIMS_VGPU_VIEW_STATE"] = filepath.Join(a.home(), "run/view-state")
 	env["REIMS_VGPU_WINDOW"] = "1"
 	if !p.Window {
 		env["REIMS_VGPU_WINDOW"] = "0"
@@ -681,6 +693,15 @@ func (a *App) status(desired string, asJSON bool) error {
 	}
 	if state == "running" || state == "reachable" {
 		viewer = s.Profile.Presentation
+		if s.Endpoint.Provider == "macbox" {
+			observed, err := a.viewer(s)
+			if err != nil {
+				viewer = "unknown"
+				observation = err.Error()
+			} else {
+				viewer = observed
+			}
+		}
 		if s.Mode == "" {
 			viewer = "unknown"
 		}
@@ -724,14 +745,14 @@ func (a *App) status(desired string, asJSON bool) error {
 			active = s.Device
 		}
 	}
-	result := map[string]any{"schema_version": 1, "leased_simulator": s.Device, "desired_mode": desired, "running_mode": nil, "vm_state": state, "stage": s.Stage, "active_simulator": active, "booted_simulators": devices, "viewer_type": viewer, "view_transport": transport, "viewer_observation": "profile intent; attachment not verified", "memory": memory, "diagnostic": observation}
+	result := map[string]any{"schema_version": 1, "leased_simulator": s.Device, "desired_mode": desired, "running_mode": nil, "vm_state": state, "stage": s.Stage, "active_simulator": active, "booted_simulators": devices, "viewer_type": viewer, "view_transport": transport, "viewer_observation": "provider presentation state; client connection not verified", "memory": memory, "diagnostic": observation}
 	if s.Mode != "" && (state == "running" || state == "reachable") {
 		result["running_mode"] = s.Mode
 	}
 	if asJSON {
 		a.json(result)
 	} else {
-		fmt.Fprintf(a.Out, "Mode: %v (default %s)\nVM: %s; stage: %s\nSimulator: %s\nViewer: %s (%s; attachment unverified)\nMemory: guest %d MiB; host available %d MiB\n", result["running_mode"], desired, state, s.Stage, s.Device, viewer, transport, s.Profile.Memory, memAvailable())
+		fmt.Fprintf(a.Out, "Mode: %v (default %s)\nVM: %s; stage: %s\nSimulator: %s\nViewer: %s (%s; client connection unverified)\nMemory: guest %d MiB; host available %d MiB\n", result["running_mode"], desired, state, s.Stage, s.Device, viewer, transport, s.Profile.Memory, memAvailable())
 		if observation != "" {
 			fmt.Fprintln(a.Out, observation)
 		}
