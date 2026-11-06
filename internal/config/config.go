@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"blackburn/internal/hardware"
+
 	"github.com/pelletier/go-toml/v2"
 )
 
@@ -30,10 +32,12 @@ type Endpoint struct {
 	Architecture string `toml:"architecture" json:"architecture"`
 }
 type Config struct {
-	Version   int                 `toml:"schema_version" json:"schema_version"`
-	Mode      string              `toml:"default_mode" json:"default_mode"`
-	Profiles  map[string]Profile  `toml:"profiles" json:"profiles"`
-	Endpoints map[string]Endpoint `toml:"endpoints" json:"endpoints"`
+	CPUSet      string              `toml:"cpu_set" json:"cpu_set"`
+	ShaderCache string              `toml:"shader_cache_max_size" json:"shader_cache_max_size"`
+	Version     int                 `toml:"schema_version" json:"schema_version"`
+	Mode        string              `toml:"default_mode" json:"default_mode"`
+	Profiles    map[string]Profile  `toml:"profiles" json:"profiles"`
+	Endpoints   map[string]Endpoint `toml:"endpoints" json:"endpoints"`
 }
 
 var Modes = []string{"headless", "stream", "studio", "hybrid", "direct"}
@@ -55,7 +59,7 @@ func Normalize(s string) (string, error) {
 	return "", fmt.Errorf("unknown mode %q (choose %s)", s, strings.Join(Modes, ", "))
 }
 func Defaults() Config {
-	return Config{1, "headless", map[string]Profile{
+	return Config{"", "2G", 1, "headless", map[string]Profile{
 		"headless": {"local", 5120, 4, "none", "640x480", false, "slim-1x", false},
 		"stream":   {"local", 6144, 6, "browser-desktop", "1280x720", true, "slim-1x", false},
 		"studio":   {"local", 8192, 8, "native", "1920x1080", true, "slim-1x", false},
@@ -115,6 +119,14 @@ func Load(path string) (Config, error) {
 	return c, c.Validate()
 }
 func (c *Config) Validate() error {
+	if c.CPUSet != "" {
+		if _, e := hardware.List(c.CPUSet); e != nil {
+			return e
+		}
+	}
+	if c.ShaderCache != "" && c.ShaderCache != "2G" {
+		return fmt.Errorf("shader_cache_max_size must be empty or 2G")
+	}
 	if c.Version != 1 {
 		return fmt.Errorf("unsupported schema_version %d", c.Version)
 	}

@@ -102,3 +102,19 @@ func TestAtomicInvalidWritePreservesConfig(t *testing.T) {
 		t.Fatal("changed config")
 	}
 }
+
+func TestHardwareConfigurationValidation(t *testing.T) {
+	for _, tt := range []struct {
+		key, value string
+		valid      bool
+	}{{"cpu_set", "0-11", true}, {"cpu_set", "2,4,8", true}, {"cpu_set", "", true}, {"cpu_set", "4-1", false}, {"cpu_set", "$(id)", false}, {"shader_cache_max_size", "2G", true}, {"shader_cache_max_size", "", true}, {"shader_cache_max_size", "bogus", false}} {
+		c := Defaults()
+		e := Set(&c, tt.key, tt.value)
+		if e == nil {
+			e = c.Validate()
+		}
+		if (e == nil) != tt.valid {
+			t.Fatal(tt, e)
+		}
+	}
+}
