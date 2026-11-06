@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"blackburn/internal/config"
+	"blackburn/internal/hardware"
 	"github.com/pelletier/go-toml/v2"
 )
 
@@ -44,6 +45,8 @@ func Execute(ctx context.Context, args, env []string) (string, error) {
 }
 
 type App struct {
+	In                   io.Reader
+	ProbeHardware        func() (hardware.Report, error)
 	Out, Err             io.Writer
 	Run                  Runner
 	Root                 string
@@ -67,7 +70,7 @@ type Check struct {
 }
 
 func New(root string) *App {
-	a := &App{Out: os.Stdout, Err: os.Stderr, Run: Execute, Root: root, Env: os.Environ(), ConfigPath: config.Path(), StateDir: filepath.Join(config.Base("XDG_STATE_HOME", ".local/state"), "blackburn"), Timeout: 180 * time.Second}
+	a := &App{In: os.Stdin, Out: os.Stdout, Err: os.Stderr, Run: Execute, Root: root, Env: os.Environ(), ConfigPath: config.Path(), StateDir: filepath.Join(config.Base("XDG_STATE_HOME", ".local/state"), "blackburn"), Timeout: 180 * time.Second}
 	a.StateDir = a.env("BLACKBURN_STATE_DIR", a.StateDir)
 	return a
 }
@@ -200,7 +203,7 @@ func parse(name string, args []string, setup func(*flag.FlagSet)) (*flag.FlagSet
 }
 func (a *App) dispatch(args []string) error {
 	if len(args) == 0 || args[0] == "help" || args[0] == "--help" || args[0] == "-h" {
-		fmt.Fprintln(a.Out, "Usage: blackburn ide <config|f5|status> [--dir=DIR] [--mode=PRESET] [--dry-run] [--json]\n       blackburn view list|get|set VIEWER [--allow-restart]|detach\n       blackburn mode [list|get|set PRESET]\n       blackburn up [--mode=PRESET]\n       blackburn down [--timeout=120s]\n       blackburn status [--json]\n       blackburn doctor [--mode=PRESET] [--json]\n       blackburn sim <up|shot|install|run|status|down|stream|touch|tap|key|text> [arguments]\n       blackburn config <get KEY|set KEY VALUE|show|validate>\nPresets: headless (agent), stream, studio (local), hybrid (remote), direct")
+		fmt.Fprintln(a.Out, "Usage: blackburn init [--auto]\n       blackburn appliance export [--output=PATH] [--compress=zstd|none]\n       blackburn appliance import FILE [--force]\n       blackburn ide <config|f5|status> [--dir=DIR] [--mode=PRESET] [--dry-run] [--json]\n       blackburn view list|get|set VIEWER [--allow-restart]|detach\n       blackburn mode [list|get|set PRESET]\n       blackburn up [--mode=PRESET]\n       blackburn down [--timeout=120s]\n       blackburn status [--json]\n       blackburn doctor [--mode=PRESET] [--json]\n       blackburn sim <up|shot|install|run|status|down|stream|touch|tap|key|text> [arguments]\n       blackburn config <get KEY|set KEY VALUE|show|validate>\nPresets: headless (agent), stream, studio (local), hybrid (remote), direct")
 		return nil
 	}
 	env, legacyErr := LegacyEnv(a.Env)
@@ -211,6 +214,12 @@ func (a *App) dispatch(args []string) error {
 	c, e := config.Load(a.ConfigPath)
 	if e != nil {
 		return fail("INVALID_CONFIG", e.Error(), 2)
+	}
+	if args[0] == "init" {
+		return a.initialize(c, args[1:])
+	}
+	if args[0] == "appliance" {
+		return a.appliance(c, args[1:])
 	}
 	cmd := args[0]
 	args = args[1:]
@@ -497,10 +506,37 @@ func (a *App) up(m string, p config.Profile, ep config.Endpoint, s Session) erro
 	if available > 0 && available < int64(p.Memory+5120) {
 		return fail("MEMORY_ADMISSION_FAILED", fmt.Sprintf("need %d MiB available; have %d MiB", p.Memory+5120, available), 4)
 	}
+	c, e := config.Load(a.ConfigPath)
+	if e != nil {
+		return e
+	}
+	tuning := []string{"MACBOX_CPUS=" + strconv.Itoa(p.CPUs), "MACBOX_MEMORY=" + strconv.Itoa((p.Memory+1023)/1024) + "G"}
+	host, probeErr := a.probeHardware()
+	if probeErr == nil {
+		for _, warning := range host.Warnings {
+			fmt.Fprintln(a.Err, "Warning:", warning)
+		}
+	}
+	if c.CPUSet != "" {
+		if probeErr != nil {
+			return probeErr
+		}
+		allowed := map[int]bool{}
+		for _, cpu := range host.CPUs {
+			allowed[cpu.ID] = true
+		}
+		ids, _ := hardware.List(c.CPUSet)
+		for _, id := range ids {
+			if !allowed[id] {
+				return fmt.Errorf("configured CPU %d is offline or unavailable; rerun blackburn init", id)
+			}
+		}
+		tuning = append(tuning, "MACBOX_CPUSET="+c.CPUSet)
+	}
 	if e = a.applyProfile(p); e != nil {
 		return e
 	}
-	env := append(append([]string{}, a.Env...), "MACBOX_HEADLESS="+strconv.FormatBool(!p.Window), "MACBOX_SSH_HOST="+ep.SSH, "MACBOX_RESOLUTION="+p.Display)
+	env := append(append(append([]string{}, a.Env...), tuning...), "MACBOX_HEADLESS="+strconv.FormatBool(!p.Window), "MACBOX_SSH_HOST="+ep.SSH, "MACBOX_RESOLUTION="+p.Display)
 	view := "stream"
 	if !p.Window {
 		view = "none"
@@ -572,6 +608,11 @@ func (a *App) applyProfile(p config.Profile) error {
 		env = map[string]any{}
 		v["extra_env"] = env
 	}
+	c, e := config.Load(a.ConfigPath)
+	if e != nil {
+		return e
+	}
+	env["MESA_SHADER_CACHE_MAX_SIZE"] = c.ShaderCache
 	env["REIMS_VGPU_CLOSE_POLICY"] = "detach"
 	env["REIMS_VGPU_VIEW_STATE"] = filepath.Join(a.home(), "run/view-state")
 	env["REIMS_VGPU_WINDOW"] = "1"

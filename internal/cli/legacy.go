@@ -11,7 +11,8 @@ import (
 )
 
 // LegacyEnv reads literal user-owned provider settings, without executing shell code.
-// Blackburn writes no legacy files. Explicit process environment takes precedence.
+// Onboarding creates a minimal file only if missing; existing files are retained.
+// Explicit process environment takes precedence.
 func LegacyEnv(env []string) ([]string, error) {
 	known := map[string]bool{}
 	values := map[string]string{}
