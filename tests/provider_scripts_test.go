@@ -210,3 +210,29 @@ int main(void) {
 		t.Fatal(e, string(out))
 	}
 }
+
+func TestArrowLakeFactsExcludeMeteorLake(t *testing.T) {
+	root, _ := filepath.Abs("..")
+	b, e := os.ReadFile(filepath.Join(root, "macbox/macbox"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	source := string(b)
+	start := strings.Index(source, "gpu_is_arl() {")
+	end := strings.Index(source[start:], "\ntuning_on() {")
+	if start < 0 || end < 0 {
+		t.Fatal("missing GPU gate")
+	}
+	function := source[start : start+end]
+	for _, tc := range []struct {
+		id  string
+		arl bool
+	}{{"0x7d55", false}, {"0x7d45", false}, {"0x7d67", true}, {"0x7dd1", true}, {"0x9a49", false}, {"0x46a6", false}} {
+		cmd := exec.Command("bash", "-c", `cat() { echo "$TEST_PCI"; }; `+function+"\ngpu_is_arl\n")
+		cmd.Env = append(os.Environ(), "TEST_PCI="+tc.id, "MACBOX_RENDER_NODE=/dev/dri/renderD128")
+		out, e := cmd.CombinedOutput()
+		if (e == nil) != tc.arl {
+			t.Fatal(tc, e, string(out))
+		}
+	}
+}

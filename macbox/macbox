@@ -137,10 +137,10 @@ guest() { ssh -o ConnectTimeout=10 "$MACBOX_SSH_HOST" "$@"; }
 # host_rt_in_place renders guest-RAM textures (the desktop's framebuffer, the simulator's screen)
 # in place; M2V_ARL_FACTS are driver facts measured on Intel's Arrow Lake iGPU only.
 ARL_FACTS="InterlockOrdersDraws,ShadowCopyBackDispatchFaster,ShadowCopyInDispatchFaster,RowCopiesDispatchFaster,SampledDepthKeepsHiZ,MultisampledDepthFasterOutOfGeneral,SampledFetchRecoversCodes,RobustIndexFetchReadsZero,FirstSparseResourceWaitsForQueues,InterlockedPassSplitNoSlower,CompressedImagesHideAliasedWrites"
-gpu_is_arl() {  # Intel Arrow Lake (Core Ultra 200S/HX/H graphics): PCI device 0x7d67, 0x7dd1, 0x7d41, 0x7d51, 0x7d45
+gpu_is_arl() {  # Intel Arrow Lake (Core Ultra 200S/HX/H graphics): PCI device 0x7d67, 0x7dd1, 0x7d41, 0x7d51, 0xb640
   local dev
   dev=$(cat "/sys/class/drm/$(basename "$MACBOX_RENDER_NODE")/device/device" 2>/dev/null || true)
-  case "$dev" in 0x7d67|0x7dd1|0x7d41|0x7d51|0x7d45) return 0 ;; esac
+  case "$dev" in 0x7d67|0x7dd1|0x7d41|0x7d51|0xb640) return 0 ;; esac
   return 1
 }
 tuning_on() {
