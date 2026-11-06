@@ -175,6 +175,30 @@ func TestIncompatibleUpDoesNotRestart(t *testing.T) {
 		}
 	}
 }
+func TestUpWaitSimulator(t *testing.T) {
+	a, out, calls := testApp(t)
+	c := config.Defaults()
+	_ = a.save(Session{Mode: "headless", Profile: c.Profiles["headless"], Endpoint: c.Endpoints["local"]})
+	if exit := a.Main([]string{"up", "--wait=simulator"}); exit != 0 {
+		t.Fatal(exit, a.Err)
+	}
+	if !strings.Contains(out.String(), "SIM-1") {
+		t.Fatal(out.String())
+	}
+	s, _ := a.session()
+	if s.Device != "SIM-1" || s.Stage != "SIM_READY" {
+		t.Fatal(s)
+	}
+	hasSimUp := false
+	for _, call := range *calls {
+		if strings.Contains(strings.Join(call, " "), "mac-sim up") {
+			hasSimUp = true
+		}
+	}
+	if !hasSimUp {
+		t.Fatal(*calls)
+	}
+}
 func TestHybridNeverAllocatesLocalVM(t *testing.T) {
 	a, _, calls := testApp(t)
 	if exit := a.Main([]string{"up", "--mode=remote"}); exit != 0 {

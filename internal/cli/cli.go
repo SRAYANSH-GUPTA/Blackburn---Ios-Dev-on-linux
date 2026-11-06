@@ -234,10 +234,14 @@ func (a *App) dispatch(args []string) error {
 	mode := ""
 	asJSON := false
 	timeout := 120 * time.Second
+	wait := ""
 	if cmd == "up" || cmd == "doctor" || cmd == "status" || cmd == "down" {
 		f, e := parse(cmd, args, func(f *flag.FlagSet) {
 			if cmd == "up" || cmd == "doctor" {
 				f.StringVar(&mode, "mode", "", "preset")
+			}
+			if cmd == "up" {
+				f.StringVar(&wait, "wait", "", "wait target: simulator")
 			}
 			if cmd == "doctor" || cmd == "status" {
 				f.BoolVar(&asJSON, "json", false, "JSON output")
@@ -293,7 +297,23 @@ func (a *App) dispatch(args []string) error {
 		return e
 	}
 	if cmd == "up" {
-		return a.up(m, p, ep, s)
+		if wait != "" && wait != "simulator" {
+			return fail("INVALID_ARGUMENT", "supported wait targets: simulator", 2)
+		}
+		if err := a.up(m, p, ep, s); err != nil {
+			return err
+		}
+		if wait == "simulator" {
+			s, err := a.session()
+			if err != nil {
+				return err
+			}
+			if s.Mode == "" {
+				s = Session{Mode: m, Profile: p, Endpoint: ep}
+			}
+			return a.sim(&s, []string{"up"})
+		}
+		return nil
 	}
 	if s.Mode == "" && cmd == "sim" {
 		s = Session{Mode: m, Profile: p, Endpoint: ep}
