@@ -1,4 +1,4 @@
-# Blackburn CLI — Phase 1 profile entrypoint
+# Blackburn CLI
 
 The Go control plane wraps the existing macbox and mac-sim installation. It does
 not download Xcode, create a VM, install packages, or start services during setup.
@@ -75,7 +75,8 @@ Project configuration is not loaded in this implementation. Supported overrides:
 User provider settings are read as literal assignments from `MACBOX_CONFIG`, or
 `~/.config/macbox/blackburn.env` when present, then `macbox.env`. Shell substitutions
 are rejected; no shell is used to parse them. Existing environment `MACBOX_*`
-values take precedence. Legacy files are preserved. The provider continues to own
+values take precedence. Existing legacy files are preserved; onboarding creates only a missing minimal
+provider config. The provider continues to own
 its existing configuration format; this is a reversible bridge, not a migration
 command. `MACBOX_HOME`, `MACBOX_CONTAINER`, `MACBOX_VM`, `MACBOX_DOCKER`,
 `MACBOX_RENDER_NODE`, and SSH configuration retain their provider meaning.
@@ -418,3 +419,38 @@ support, network recovery, or xcross app/tunnel cleanup. Validate those on the
 installed xcross and each supported mode before claiming Phase 4 certification.
 A VS Code session selector/status extension and native LLDB integration remain
 separate work; this change supplies the CLI/configuration bridge.
+
+## Laptop onboarding and appliances
+
+```bash
+blackburn init                 # inspect host; confirm optimized local profiles
+blackburn init --auto          # apply detected defaults without prompting
+blackburn appliance export --output=/fast-storage/golden.appliance.zst
+blackburn appliance export --compress=none --output=/fast-storage/golden.appliance
+blackburn appliance import /downloads/golden.appliance.zst
+blackburn appliance import /downloads/golden.appliance.zst --force
+```
+
+Onboarding validates Intel amd64 Linux/KVM, Docker and Intel Mesa/ANV Vulkan,
+computes guest memory/vCPU defaults and P-core affinity, and prepares user data
+and missing provider configuration. It requires a stopped VM and retains existing
+endpoint/provider settings. `cpu_set` is a top-level Linux CPU list (empty leaves
+provider/scheduler affinity unchanged). `shader_cache_max_size` accepts `2G` or
+empty and controls the QEMU Mesa disk shader cache. Local launch revalidates saved
+CPU availability and warns on battery power. `init` updates all macbox profiles;
+remote profiles and the selected default mode remain unchanged.
+
+Export gracefully shuts down a managed local VM and retires its container;
+unmanaged/paused/suspended VMs are refused. The default output is
+`./blackburn.appliance.zst`, and existing output files are never overwritten.
+Both `zstd` (default) and `none` omit zero disk blocks. Only standalone relative
+disk/firmware references and portable QEMU options are supported.
+
+Import verifies all logical-file SHA-256 hashes before installing the VM, retunes
+resources for the recipient, and registers through reims-ctl's VM directory. It
+never starts the guest. `--force` permits replacing an existing stopped VM,
+retaining `<VM>.pre-import`; an existing backup blocks further replacement.
+Fresh hosts still need the provider runtime/container and guest SSH access.
+Hardware reports live under the Blackburn state directory as `hardware.json`
+after `init`. See [laptop optimization and packaging](BLACKBURN_LAPTOP_OPTIMIZATION_AND_PACKAGING.md)
+for the host matrix, archive format, benchmark protocol and setup prerequisites.
