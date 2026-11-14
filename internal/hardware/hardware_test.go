@@ -87,3 +87,22 @@ func TestNoSMTCoreTypeAndFallback(t *testing.T) {
 		t.Fatal(r, e)
 	}
 }
+func TestAMDRyzenRadeonProbe(t *testing.T) {
+	root := t.TempDir()
+	fixture(t, root, "sys/devices/system/cpu/online", "0-15")
+	fixture(t, root, "proc/self/status", "Cpus_allowed_list:\t0-15\n")
+	fixture(t, root, "proc/cpuinfo", "processor\t: 0\nvendor_id\t: AuthenticAMD\nmodel name\t: AMD Ryzen 7 7840HS\n")
+	fixture(t, root, "proc/meminfo", "MemTotal: 16384000 kB\nMemAvailable: 12000000 kB")
+	fixture(t, root, "sys/bus/pci/devices/0000:c1:00.0/vendor", "0x1002")
+	fixture(t, root, "sys/bus/pci/devices/0000:c1:00.0/device", "0x15bf")
+	fixture(t, root, "sys/bus/pci/devices/0000:c1:00.0/class", "0x030000")
+	fixture(t, root, "sys/class/power_supply/AC/type", "Mains")
+	fixture(t, root, "sys/class/power_supply/AC/online", "1")
+	r, e := Probe(root)
+	if e != nil || r.CPUVendor != "AuthenticAMD" || r.CPUList != "" || r.VCPUs != 8 || r.GuestMiB != 6144 || len(r.GPUs) != 1 {
+		t.Fatalf("%+v %v", r, e)
+	}
+	if r.GPUs[0].Vendor != "0x1002" || r.GPUs[0].Device != "0x15bf" || !strings.Contains(r.GPUs[0].Family, "Radeon 780M") {
+		t.Fatalf("unexpected GPU: %+v", r.GPUs[0])
+	}
+}

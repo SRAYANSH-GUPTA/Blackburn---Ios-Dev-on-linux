@@ -16,8 +16,9 @@ type CPU struct {
 	MaxKHz        int
 	Package, Core string
 }
-type GPU struct{ PCI, Device, Family, Driver string }
+type GPU struct{ PCI, Vendor, Device, Family, Driver string }
 type Report struct {
+	CPUVendor                        string
 	CPUs                             []CPU
 	CPUList                          string
 	VCPUs                            int
@@ -181,6 +182,14 @@ func Probe(root string) (Report, error) {
 	if r.VCPUs < 1 {
 		return r, fmt.Errorf("no allowed online CPUs")
 	}
+	for _, line := range strings.Split(read(root, "proc/cpuinfo"), "\n") {
+		if strings.HasPrefix(line, "vendor_id") {
+			if _, v, ok := strings.Cut(line, ":"); ok {
+				r.CPUVendor = strings.TrimSpace(v)
+				break
+			}
+		}
+	}
 	for _, line := range strings.Split(read(root, "proc/meminfo"), "\n") {
 		f := strings.Fields(line)
 		if len(f) < 2 {
@@ -195,19 +204,29 @@ func Probe(root string) (Report, error) {
 	}
 	r.GuestMiB = Memory(r.TotalMiB)
 	devices, _ := filepath.Glob(filepath.Join(root, "sys/bus/pci/devices/*"))
-	families := map[string]string{"0x7d55": "Meteor Lake Arc", "0x7d67": "Arrow Lake", "0x7dd1": "Arrow Lake", "0x7d45": "Meteor Lake", "0x9a49": "Tiger Lake Iris Xe", "0x46a6": "Alder Lake Iris Xe"}
+	intelFamilies := map[string]string{"0x7d55": "Meteor Lake Arc", "0x7d67": "Arrow Lake", "0x7dd1": "Arrow Lake", "0x7d45": "Meteor Lake", "0x9a49": "Tiger Lake Iris Xe", "0x46a6": "Alder Lake Iris Xe"}
+	amdFamilies := map[string]string{"0x15bf": "Radeon 780M (RDNA3)", "0x1681": "Radeon 680M (RDNA2)", "0x150e": "Radeon 890M (RDNA3.5)", "0x744c": "Radeon RX 7900 XTX (RDNA3)"}
 	for _, d := range devices {
 		rel, _ := filepath.Rel(root, d)
-		if read(root, rel+"/vendor") != "0x8086" || !strings.HasPrefix(read(root, rel+"/class"), "0x03") {
+		ven := read(root, rel+"/vendor")
+		if (ven != "0x8086" && ven != "0x1002") || !strings.HasPrefix(read(root, rel+"/class"), "0x03") {
 			continue
 		}
 		id := read(root, rel+"/device")
-		family := families[id]
-		if family == "" {
-			family = "Intel display (unclassified)"
+		var family string
+		if ven == "0x8086" {
+			family = intelFamilies[id]
+			if family == "" {
+				family = "Intel display (unclassified)"
+			}
+		} else {
+			family = amdFamilies[id]
+			if family == "" {
+				family = "AMD Radeon (unclassified)"
+			}
 		}
 		driver, _ := os.Readlink(filepath.Join(d, "driver"))
-		r.GPUs = append(r.GPUs, GPU{filepath.Base(d), id, family, filepath.Base(driver)})
+		r.GPUs = append(r.GPUs, GPU{PCI: filepath.Base(d), Vendor: ven, Device: id, Family: family, Driver: filepath.Base(driver)})
 	}
 	supplies, _ := filepath.Glob(filepath.Join(root, "sys/class/power_supply/*"))
 	acKnown, ac, battery := false, false, false

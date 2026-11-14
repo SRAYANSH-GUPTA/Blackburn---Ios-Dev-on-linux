@@ -235,4 +235,9 @@ func TestArrowLakeFactsExcludeMeteorLake(t *testing.T) {
 			t.Fatal(tc, e, string(out))
 		}
 	}
+	cmd := exec.Command("bash", "-c", `cat() { case "$1" in */vendor) echo 0x1002 ;; *) echo 0x7d67 ;; esac; }; `+function+"\ngpu_is_arl\n")
+	cmd.Env = append(os.Environ(), "MACBOX_RENDER_NODE=/dev/dri/renderD128")
+	if out, e := cmd.CombinedOutput(); e == nil {
+		t.Fatal("AMD vendor matched Arrow Lake facts:", string(out))
+	}
 }

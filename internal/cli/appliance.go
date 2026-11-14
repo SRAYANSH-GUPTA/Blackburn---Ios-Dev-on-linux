@@ -32,11 +32,12 @@ func (a *App) prerequisites() (hardware.Report, error) {
 	// Injected probes are test fixtures. Real onboarding verifies KVM with its API ioctl.
 	if a.ProbeHardware == nil {
 		if runtime.GOOS != "linux" || runtime.GOARCH != "amd64" {
-			return r, fmt.Errorf("Intel x86_64 Linux required")
+			return r, fmt.Errorf("x86_64 Linux required")
 		}
 		cpuinfo, _ := os.ReadFile("/proc/cpuinfo")
-		if !strings.Contains(string(cpuinfo), "GenuineIntel") {
-			return r, fmt.Errorf("Intel CPU required")
+		s := string(cpuinfo)
+		if !strings.Contains(s, "GenuineIntel") && !strings.Contains(s, "AuthenticAMD") {
+			return r, fmt.Errorf("Intel or AMD x86_64 CPU required")
 		}
 		f, e := os.OpenFile("/dev/kvm", os.O_RDWR, 0)
 		if e != nil {
@@ -47,12 +48,29 @@ func (a *App) prerequisites() (hardware.Report, error) {
 		if errno != 0 || version != 12 {
 			return r, fmt.Errorf("KVM API unavailable (version %d, errno %d)", version, errno)
 		}
+		hasAMD := false
+		hasIntel := false
+		for _, g := range r.GPUs {
+			if g.Vendor == "0x1002" {
+				hasAMD = true
+			}
+			if g.Vendor == "0x8086" || g.Vendor == "" {
+				hasIntel = true
+			}
+		}
+		if hasAMD && !hasIntel {
+			u, err := os.OpenFile("/dev/udmabuf", os.O_RDWR, 0)
+			if err != nil {
+				return r, fmt.Errorf("AMD Radeon zero-copy guest memory import requires /dev/udmabuf access: %w", err)
+			}
+			u.Close()
+		}
 	}
 	if r.GuestMiB < 4096 {
 		return r, fmt.Errorf("insufficient RAM for host reserve and 4 GiB guest")
 	}
 	if len(r.GPUs) == 0 {
-		return r, fmt.Errorf("Intel display GPU not detected")
+		return r, fmt.Errorf("supported Intel or AMD display GPU not detected")
 	}
 	if _, e = a.docker("info", "--format", "{{.ServerVersion}}"); e != nil {
 		return r, fmt.Errorf("Docker daemon unavailable: %w", e)
@@ -61,8 +79,8 @@ func (a *App) prerequisites() (hardware.Report, error) {
 	if e != nil {
 		return r, fmt.Errorf("Vulkan unavailable: %w", e)
 	}
-	if !regexp.MustCompile(`(?mi)^\s*driverName\s*=\s*(Intel open-source Mesa driver|anv)\s*$`).MatchString(v) {
-		return r, fmt.Errorf("Intel Mesa ANV Vulkan device required")
+	if !regexp.MustCompile(`(?mi)^\s*driverName\s*=\s*(Intel open-source Mesa driver|anv|radv|AMD open-source driver|Mesa RADV)\s*$`).MatchString(v) {
+		return r, fmt.Errorf("Intel Mesa ANV or AMD Mesa RADV Vulkan device required")
 	}
 	r.Vulkan = v
 	return r, nil

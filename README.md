@@ -1,23 +1,23 @@
 # Blackburn ⚡
 
-> **Full iOS app compilation, linking, GPU-accelerated simulation, and hot-reload debugging on non-Mac Intel Linux laptops — with no physical iPhone required.**
+> **Full iOS app compilation, linking, GPU-accelerated simulation, and hot-reload debugging on non-Mac Intel & AMD Linux laptops — with no physical iPhone required.**
 
 ---
 
 ## 1. Overview & Mission
 
-iOS development traditionally mandates physical Apple hardware: macOS workstations for Xcode and physical iPhones for testing. **Blackburn** solves this constraint on **Intel Linux laptops** (`x86_64`, Intel Core Ultra 7 155H / Meteor Lake / Arrow Lake / Iris Xe):
+iOS development traditionally mandates physical Apple hardware: macOS workstations for Xcode and physical iPhones for testing. **Blackburn** solves this constraint on **Intel and AMD `x86_64` Linux laptops** (Intel Core Ultra / Meteor Lake / Arrow Lake / Iris Xe, and AMD Ryzen 6000/7000/8000/AI 300 with Radeon 680M/780M/890M):
 
-- **No physical iPhone needed**: Runs authentic Apple iOS Simulator runtimes (`x86_64-apple-ios-simulator`) locally with Intel Arc hardware graphics acceleration (60–96 FPS).
+- **No physical iPhone needed**: Runs authentic Apple iOS Simulator runtimes (`x86_64-apple-ios-simulator`) locally with Intel Arc (`anv`) or AMD Radeon (`radv` + `/dev/udmabuf`) hardware graphics acceleration (60–96 FPS).
 - **No macOS workstation required for daily coding**: Write, build, and debug your Flutter or native apps directly in Linux VS Code with full F5 one-click execution, Dart DevTools, and stateful hot reload.
 - **Multiple Operational Modes**: Switch seamlessly between a high-FPS native Wayland window (`studio`), an in-browser desktop stream (`stream`), a headless low-RAM simulator streamer (`headless`), or remote Mac compilation (`hybrid`).
-- **One-Command Portability**: Export your configured, tuned macOS + Xcode appliance and restore it on any new Intel laptop in under 5 minutes with `blackburn appliance export|import`.
+- **One-Command Portability**: Export your configured, tuned macOS + Xcode appliance and restore it on any new Intel or AMD laptop in under 5 minutes with `blackburn appliance export|import`.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                      BLACKBURN ARCHITECTURE                            │
 ├────────────────────────────────────────────────────────────────────────┤
-│  LINUX HOST (Intel x86_64, Linux Kernel 6.x+, Mesa ANV Vulkan)        │
+│  LINUX HOST (Intel/AMD x86_64, Kernel 6.x+, Mesa ANV / RADV Vulkan)    │
 │                                                                        │
 │  ┌───────────────────────┐         ┌──────────────────────────────┐    │
 │  │   Developer IDE       │         │    Blackburn Control Plane   │    │
@@ -47,9 +47,9 @@ iOS development traditionally mandates physical Apple hardware: macOS workstatio
 
 | Component | Minimum | Recommended |
 | :--- | :--- | :--- |
-| **CPU** | Intel 11th Gen Core (Tiger Lake `x86_64`) | Intel Core Ultra Series 1/2 (Meteor Lake / Arrow Lake) or 12th–14th Gen Core i7/i9 |
-| **Virtualization** | Intel VT-x (`/dev/kvm` accessible) | Intel VT-x enabled, user in `kvm` group |
-| **GPU & Vulkan** | Intel Iris Xe (`0x9a49` / `0x46a6`) | Intel Arc Graphics (`0x7d55` / `0x7d45` / `0x7d67`) with Mesa 24.2+ (`vulkan-intel`) |
+| **CPU** | Intel 11th Gen+ (`GenuineIntel`) or AMD Ryzen 5000+ (`AuthenticAMD`) with AVX2 | Intel Core Ultra (Meteor/Arrow Lake) or AMD Ryzen 7 7840HS / 8840HS / AI 9 HX 370 |
+| **Virtualization** | Intel VT-x (`kvm_intel`) or AMD-V / SVM (`kvm_amd`, `/dev/kvm` accessible) | VT-x or SVM enabled in BIOS, user in `kvm` group (`options kvm ignore_msrs=1` on AMD) |
+| **GPU & Vulkan** | Intel Iris Xe (`0x8086`) or AMD Radeon RDNA2+ (`0x1002`) | Intel Arc (`anv`) or AMD Radeon 680M/780M/890M/RX (`radv` + `/dev/udmabuf`) with Mesa 24.2+ |
 | **RAM** | 16 GB Physical RAM | 16 GB to 32 GB RAM (Blackburn auto-sizes guest RAM to 6–10 GB) |
 | **Storage** | 100 GB NVMe SSD | 150 GB+ NVMe SSD |
 | **Host OS** | Any modern x86_64 Linux (Arch, Ubuntu 22.04+, Fedora) | Wayland desktop session (GNOME, Sway, KDE Wayland) |
@@ -152,17 +152,24 @@ blackburn appliance export --output=~/blackburn-golden.appliance.zst
 ### 6.2 On the Brand New Laptop (Import)
 1. Install prerequisites on the new machine:
    ```bash
-   # Arch Linux:
-   sudo pacman -S qemu-base libvirt docker vulkan-intel zstd git go
-   sudo usermod -aG docker,kvm $USER
+   # Arch Linux (Intel or AMD):
+   sudo pacman -S qemu-base libvirt docker vulkan-intel vulkan-radeon vulkan-tools zstd git go
+   sudo usermod -aG docker,kvm,render $USER
    
-   # Ubuntu / Debian:
-   sudo apt install qemu-system-x86 libvirt-daemon-system docker.io mesa-vulkan-drivers zstd git golang
-   sudo usermod -aG docker,kvm $USER
+   # Ubuntu / Debian (Intel or AMD):
+   sudo apt install qemu-system-x86 libvirt-daemon-system docker.io mesa-vulkan-drivers vulkan-tools zstd git golang
+   sudo usermod -aG docker,kvm,render $USER
+
+   # Extra step for AMD Ryzen + Radeon laptops (enable ignore_msrs and /dev/udmabuf zero-copy import):
+   sudo modprobe kvm_amd amdgpu udmabuf
+   echo "udmabuf" | sudo tee /etc/modules-load.d/blackburn-udmabuf.conf
+   echo "options kvm ignore_msrs=1" | sudo tee /etc/modprobe.d/blackburn-kvm.conf
+   echo 'KERNEL=="udmabuf", GROUP="kvm", MODE="0660"' | sudo tee /etc/udev/rules.d/99-blackburn-udmabuf.rules
+   sudo udevadm control --reload-rules && sudo udevadm trigger /dev/udmabuf
    ```
 2. Clone Blackburn and link the CLI:
    ```bash
-   git clone https://github.com/your-username/Blackburn.git ~/Documents/Golang/Blackburn
+   git clone https://github.com/SRAYANSH-GUPTA/Blackburn---Ios-Dev-on-linux.git ~/Documents/Golang/Blackburn
    mkdir -p ~/.local/bin
    ln -sf ~/Documents/Golang/Blackburn/bin/blackburn ~/.local/bin/blackburn
    ```
@@ -186,7 +193,7 @@ blackburn mode set <mode> [--apply]           # Set default profile (or apply im
 blackburn up [--mode=PRESET] [--wait=simulator] # Start VM (optionally wait for simulator boot)
 blackburn down [--timeout=120s]               # Gracefully shut down guest OS
 blackburn status [--json]                     # Report VM state, active lease, memory, viewer, and IP
-blackburn doctor [--mode=PRESET]              # Check KVM, Vulkan ANV, Docker, and SSH connectivity
+blackburn doctor [--mode=PRESET]              # Check KVM, Vulkan ANV/RADV, Docker, and SSH connectivity
 
 # Simulator Automation
 blackburn sim up                              # Lease and boot a clean slim simulator
@@ -224,13 +231,13 @@ blackburn config set <key> <value>            # Update config key (e.g. profiles
 
 ## 8. AI Agent Automated Onboarding Prompt
 
-If you are using an AI coding assistant (**Antigravity, Codex, Claude Code, Cursor, Windsurf, Aider**) to set up Blackburn on a new laptop, copy and paste the prompt below into the agent chat:
+If you are using an AI coding assistant (**Antigravity, Codex, Claude Code, Cursor, Windsurf, Aider**) to set up Blackburn on a new Intel or AMD laptop, copy and paste the prompt below into the agent chat:
 
 <details open>
 <summary><b>📋 Click to expand: AI Agent Onboarding Prompt</b></summary>
 
 ```markdown
-You are an expert Systems & Release Engineer. Your task is to set up and verify Blackburn (iOS Development & Simulator Kit on Intel Linux) on this laptop.
+You are an expert Systems & Release Engineer. Your task is to set up and verify Blackburn (iOS Development & Simulator Kit on Intel & AMD Linux) on this laptop.
 
 Repository Directory: /home/srayansh/Documents/Golang/Blackburn (or current working directory)
 
@@ -238,10 +245,12 @@ Follow these strict step-by-step instructions:
 
 ### Step 1: Host Prerequisites Check
 1. Verify operating system is Linux x86_64 (`uname -m`).
-2. Verify CPU is Intel (`grep -m1 "model name" /proc/cpuinfo`).
+2. Verify CPU is Intel (`GenuineIntel`) or AMD (`AuthenticAMD`) with AVX2 (`grep -m1 -E "vendor_id|model name" /proc/cpuinfo && grep -q avx2 /proc/cpuinfo`).
 3. Check KVM accessibility: verify `/dev/kvm` exists and is readable/writable (`test -r /dev/kvm && test -w /dev/kvm`). If permission denied, advise adding the user to the `kvm` group.
+   - If the CPU is `AuthenticAMD`, verify `kvm_amd` is loaded and recommend setting `options kvm ignore_msrs=1` in `/etc/modprobe.d/blackburn-kvm.conf`. Never enable `-cpu host` or `AVX-512` on AMD Zen 4/5 guests (keep the default `Skylake-Client-noTSX-IBRS` model).
 4. Check Docker daemon status (`docker info`). Ensure user is in the `docker` group.
-5. Check Intel Vulkan driver: run `vulkaninfo --summary` and verify that the driver is `Intel open-source Mesa driver` (`anv`).
+5. Check Vulkan driver: run `vulkaninfo --summary` and verify that the driver is either Intel Mesa ANV (`Intel open-source Mesa driver` / `anv`) or AMD Mesa RADV (`radv` / `AMD open-source driver`).
+   - If the GPU is AMD Radeon (`0x1002`), verify `/dev/udmabuf` exists and is readable/writable (`test -r /dev/udmabuf && test -w /dev/udmabuf`) for zero-copy DMA-BUF guest memory import.
 
 ### Step 2: Install / Link the Blackburn CLI
 1. Ensure the executable launcher is linked:
@@ -254,7 +263,7 @@ Follow these strict step-by-step instructions:
 1. Run `blackburn doctor`. If any check fails, resolve it before proceeding.
 2. Run hardware discovery:
    blackburn init --auto
-   This probes CPU topology (P-cores vs E-cores), sizes guest RAM safely according to host capacity (e.g. 6 GB on 16 GB laptops), configures Mesa shader caches (2 GB), and writes `~/.config/blackburn/config.toml`.
+   This probes CPU topology (P-cores vs E-cores on Intel, or scheduler-managed Zen cores on AMD), sizes guest RAM safely according to host capacity (e.g. 6 GB on 16 GB laptops), configures Mesa shader caches (2 GB), and writes `~/.config/blackburn/config.toml`.
 
 ### Step 4: Provision or Import the macOS Appliance
 Check if the local macbox VM already exists at `~/.local/share/macbox/home/.local/share/reims-ctl/vms/mac/vm.toml`:
@@ -294,6 +303,7 @@ Output a concise summary of the discovered hardware, active mode, leased simulat
 - **Master Operational Manual**: [`docs/BLACKBURN_IOS_DEVELOPMENT_MANUAL.md`](file:///home/srayansh/Documents/Golang/Blackburn/docs/BLACKBURN_IOS_DEVELOPMENT_MANUAL.md) — 688 lines, troubleshooting traps (`SIGBUS`, `METAL_ERROR_MODE=5`, APFS page-in, QMP input, Impeller patches).
 - **Multi-Mode Kit Architecture**: [`docs/BLACKBURN_MULTI_MODE_KIT_PLAN.md`](file:///home/srayansh/Documents/Golang/Blackburn/docs/BLACKBURN_MULTI_MODE_KIT_PLAN.md) — 5 operational presets, memory quotas, lifecycle boundaries.
 - **Laptop Optimization & Packaging**: [`docs/BLACKBURN_LAPTOP_OPTIMIZATION_AND_PACKAGING.md`](file:///home/srayansh/Documents/Golang/Blackburn/docs/BLACKBURN_LAPTOP_OPTIMIZATION_AND_PACKAGING.md) — Hybrid CPU topology, P-core benchmarks, sparse streaming format.
+- **AMD CPU & Radeon GPU Support**: [`reports/AMD CPU and Radeon GPU support.md`](file:///home/srayansh/Documents/Golang/Blackburn/reports/AMD%20CPU%20and%20Radeon%20GPU%20support.md) — `kvm_amd` / SVM virtualization, Zen 4/5 AVX-512 `XSAVE` precautions, `/dev/udmabuf` zero-copy RADV DMA-BUF import, and AMD host setup.
 - **CLI Reference Guide**: [`docs/BLACKBURN_CLI.md`](file:///home/srayansh/Documents/Golang/Blackburn/docs/BLACKBURN_CLI.md) — Syntax, exit codes, and JSON schemas.
 - **Research Reports**: [`reports/`](file:///home/srayansh/Documents/Golang/Blackburn/reports/) — Headless graphics decoupling, compilation pipelines, Apple signing/keychain CLI without GUI.
 

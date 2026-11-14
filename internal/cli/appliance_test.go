@@ -315,3 +315,28 @@ func TestPrerequisiteDockerAndVulkanFailures(t *testing.T) {
 		}
 	}
 }
+func TestAMDPrerequisitesRADV(t *testing.T) {
+	a := portableApp(t)
+	a.ProbeHardware = func() (hardware.Report, error) {
+		return hardware.Report{
+			CPUVendor: "AuthenticAMD", TotalMiB: 16384, GuestMiB: 6144, VCPUs: 8,
+			CPUs:  []hardware.CPU{{ID: 0, Kind: "unknown"}},
+			GPUs:  []hardware.GPU{{PCI: "0000:c1:00.0", Vendor: "0x1002", Device: "0x15bf", Family: "Radeon 780M (RDNA3)"}},
+			Power: "AC",
+		}, nil
+	}
+	base := a.Run
+	a.Run = func(ctx context.Context, args, env []string) (string, error) {
+		if args[0] == "vulkaninfo" {
+			return "driverID = DRIVER_ID_MESA_RADV\ndriverName = radv\ndriverInfo = Mesa 26.2.6", nil
+		}
+		return base(ctx, args, env)
+	}
+	if n := a.Main([]string{"init", "--auto"}); n != 0 {
+		t.Fatal(n, a.Err)
+	}
+	c, e := config.Load(a.ConfigPath)
+	if e != nil || c.Profiles["headless"].Memory != 6144 || c.Profiles["headless"].CPUs != 8 || c.ShaderCache != "2G" {
+		t.Fatal(c, e)
+	}
+}
