@@ -38,7 +38,7 @@ cenv() {  # the environment every container process gets
     -e "MACBOX_RENDER_NODE=$MACBOX_RENDER_NODE" -e "MACBOX_RESOLUTION=$MACBOX_RESOLUTION" \
     -e "MACBOX_SCREEN_PORT=$MACBOX_SCREEN_PORT"
   local v
-  for v in MACBOX_STREAM_ORIGINS MACBOX_STREAM_BITRATE MACBOX_STREAM_TITLE MACBOX_BUILD_JOBS MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL CARGO_BUILD_JOBS NINJAFLAGS; do
+  for v in MACBOX_STREAM_ARGS MACBOX_STREAM_ORIGINS MACBOX_STREAM_BITRATE MACBOX_STREAM_TITLE MACBOX_BUILD_JOBS MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL CARGO_BUILD_JOBS NINJAFLAGS; do
     [ -n "${!v:-}" ] && printf '%s\n' -e "$v=${!v}"
   done
   return 0
@@ -58,8 +58,26 @@ container_start() {
   local e dev=(--device /dev/kvm --device "$MACBOX_RENDER_NODE") vol=() wl
   mapfile -t e < <(cenv)
   [ -e /dev/udmabuf ] && dev+=(--device /dev/udmabuf)   # AMD GPUs import guest memory through it
+  if [ "${MACBOX_NVIDIA:-0}" = 1 ]; then  # the host's proprietary NVIDIA driver, mounted file by file
+    local n f
+    for n in /dev/nvidia0 /dev/nvidiactl /dev/nvidia-modeset /dev/nvidia-uvm /dev/nvidia-uvm-tools; do
+      [ -e "$n" ] && dev+=(--device "$n")
+    done
+    for f in /usr/lib/libnvidia-*.so.[0-9]*.* /usr/lib/x86_64-linux-gnu/libnvidia-*.so.[0-9]*.* \
+             /usr/lib/libGLX_nvidia.so.[0-9]*.* /usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.[0-9]*.* \
+             /usr/lib/libEGL_nvidia.so.[0-9]*.* /usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.[0-9]*.* \
+             /usr/lib/libcuda.so.[0-9]*.* /usr/lib/x86_64-linux-gnu/libcuda.so.[0-9]*.* \
+             /usr/lib/libnvcuvid.so.[0-9]*.* /usr/lib/x86_64-linux-gnu/libnvcuvid.so.[0-9]*.*; do
+      [ -f "$f" ] && vol+=(-v "$f:/usr/lib/x86_64-linux-gnu/$(basename "$f"):ro")
+    done
+    for f in /usr/share/glvnd/egl_vendor.d/10_nvidia.json:/usr/share/glvnd/egl_vendor.d/10_nvidia.json \
+             /usr/share/vulkan/icd.d/nvidia_icd.json:/run/nvidia-host/nvidia_icd.json /usr/share/nvidia:/usr/share/nvidia \
+             /usr/share/egl/egl_external_platform.d:/usr/share/egl/egl_external_platform.d; do
+      [ -e "${f%%:*}" ] && vol+=(-v "$f:ro")
+    done
+  fi
   if [ "$(view)" = local ]; then
-    if wl=$(host_wayland); then vol=(-v "$wl:/tmp/host-wayland/wayland-0")
+    if wl=$(host_wayland); then vol+=(-v "$wl:/tmp/host-wayland/wayland-0")
     else warn "view local, but this shell has no Wayland session (WAYLAND_DISPLAY): the window goes to the browser stream"; fi
   fi
   if [ -n "${MACBOX_WORKSPACE:-}" ]; then
@@ -72,6 +90,9 @@ container_start() {
     -v "$MACBOX_HOME:$MACBOX_HOME" -v "$REPO:$REPO:ro" "${vol[@]}" \
     -p "127.0.0.1:$MACBOX_SSH_PORT:22" -p "127.0.0.1:$MACBOX_SCREEN_PORT:6080" \
     "$MACBOX_IMAGE" sleep infinity >/dev/null
+  if [ "${MACBOX_NVIDIA:-0}" = 1 ]; then
+    $DOCKER exec "$C" bash "$REPO/container/nvidia-setup.sh" || die "NVIDIA driver setup in the container failed"
+  fi
   if [ -n "${MACBOX_WORKSPACE:-}" ]; then
     # No host port is published. Only the guest's passt network sees SMB.
     in_c bash -c 'cat > /tmp/blackburn-smb.conf <<EOF

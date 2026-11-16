@@ -337,7 +337,7 @@ func validVMName(s string) bool {
 func (a *App) checkApplianceState() error {
 	out, e := a.docker("inspect", "--format", "{{.State.Running}}", a.container())
 	if e != nil {
-		if strings.Contains(out+e.Error(), "No such") {
+		if strings.Contains(strings.ToLower(out+e.Error()), "no such") {
 			return nil
 		}
 		return e

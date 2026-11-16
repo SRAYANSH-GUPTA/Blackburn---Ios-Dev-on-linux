@@ -146,7 +146,7 @@ func (a *App) ctl(args ...string) (string, error) {
 func (a *App) running() (bool, error) {
 	s, e := a.docker("inspect", "--format", "{{.State.Running}}", a.container())
 	if e != nil {
-		if strings.Contains(s, "No such") || strings.Contains(e.Error(), "No such") {
+		if strings.Contains(strings.ToLower(s+e.Error()), "no such") {
 			return false, nil
 		}
 		return false, e
@@ -649,7 +649,7 @@ func (a *App) applyProfile(p config.Profile) error {
 func (a *App) retireStoppedContainer() error {
 	out, e := a.docker("inspect", "--format", "{{.State.Running}}", a.container())
 	if e != nil {
-		if strings.Contains(out+e.Error(), "No such") {
+		if strings.Contains(strings.ToLower(out+e.Error()), "no such") {
 			return nil
 		}
 		return e
