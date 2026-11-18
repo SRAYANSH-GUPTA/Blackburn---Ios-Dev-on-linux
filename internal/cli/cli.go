@@ -167,6 +167,7 @@ func (a *App) running() (bool, error) {
 	return false, nil
 }
 func (a *App) Main(args []string) int {
+	a.Env = append([]string{"PATH=" + filepath.Join(a.Root, "bin") + string(os.PathListSeparator) + a.env("PATH", os.Getenv("PATH"))}, withoutPath(a.Env)...)
 	wantJSON := false
 	for _, arg := range args {
 		if arg == "--json" {
@@ -844,6 +845,15 @@ func (a *App) doctor(p config.Profile, ep config.Endpoint, asJSON bool) error {
 		checks = append(checks, Check{name, e == nil, strings.TrimSpace(detail)})
 	}
 	probe := func(name string, args ...string) { s, e := a.call(args...); add(name, s, e) }
+	link, linkErr := os.Readlink(a.xcrossLink())
+	if linkErr == nil && link != filepath.Join(a.Root, "bin", "xcross") {
+		linkErr = fmt.Errorf("xcross points to %s", link)
+	}
+	if linkErr != nil {
+		linkErr = fmt.Errorf("%v; run blackburn init --auto to install bundled xcross", linkErr)
+	}
+	add("bundled_xcross", link, linkErr)
+	probe("xcross", filepath.Join(a.Root, "bin", "xcross"), "--version")
 	if ep.Provider == "direct-ios" {
 		add("provider", "", errors.New("direct iOS provider unavailable"))
 	} else {

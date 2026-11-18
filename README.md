@@ -88,12 +88,38 @@ export PATH="$HOME/.local/bin:$PATH"
 Run the hardware doctor to verify KVM, Intel Vulkan Mesa, and Docker:
 
 ```bash
-# 1. Check prerequisites
-blackburn doctor
-
-# 2. Run auto-onboarding (auto-detects CPU P-cores, RAM, and GPU)
+# Auto-detect CPU cores, RAM and GPU; install the bundled xcross launcher
 blackburn init --auto
+
+# Verify prerequisites and the patched xcross link
+blackburn doctor
 ```
+
+`init` links `~/.local/bin/xcross` to this checkout's `bin/xcross`. An existing
+regular binary is preserved as `xcross.upstream-backup`; an existing backup is
+never overwritten. Blackburn and generated VS Code tasks always select the
+bundled launcher, even if an upstream xcross appears earlier in your shell PATH.
+Re-run `blackburn ide config --dir=/path/to/flutter_app` to update existing IDE files.
+
+The launcher needs Dart with `dart build cli` support on PATH and compiles the bundled workspace on first use.
+It caches the executable under `${XDG_CACHE_HOME:-~/.cache}/blackburn/xcross/`
+and rebuilds when Dart/native sources, package manifests, or the Dart SDK change. Build output goes to
+stderr so the DAP protocol stays clean.
+
+On x86_64 Linux (Intel or AMD), no simulator environment exports are needed:
+
+```bash
+cd /path/to/flutter_app
+xcross flutter build --target-platform simulator
+blackburn sim install build/xcross-ios-simulator/x86_64/Runner.app
+```
+
+Use the `.app` path printed by the build (the app name may differ). Simulator
+execution defaults to SSH alias `macbox` on Linux. Explicit
+`XCROSS_SIMULATOR_HOST=my-mac`, `XCROSS_SIMULATOR_ARCH=arm64`, or `--arch arm64`
+override the defaults (`--arch` wins over the architecture environment variable).
+Device builds keep their existing behavior. After onboarding, use `rehash` in zsh
+or `hash -r` in bash if the shell cached an old xcross location.
 
 ### 4.3 Start the Simulator
 To boot the macOS VM, prewarm the Intel Arc Metal GPU driver, and open the slim iOS Simulator in **one command**:

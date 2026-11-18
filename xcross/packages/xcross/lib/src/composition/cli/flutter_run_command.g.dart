@@ -19,6 +19,7 @@ T _$enumValueHelper<T>(Map<T, String> enumValues, String source) => enumValues
 
 FlutterRunArgs _$parseFlutterRunArgsResult(ArgResults result) =>
     FlutterRunArgs()
+      ..arch = result['arch'] as String?
       ..target = result['target'] as String
       ..flavor = result['flavor'] as String?
       ..dartDefine = result['dart-define'] as List<String>
@@ -47,6 +48,11 @@ const _$DeviceConnectionEnumMapBuildCli = <DeviceConnection, String>{
 };
 
 ArgParser _$populateFlutterRunArgsParser(ArgParser parser) => parser
+  ..addOption(
+    'arch',
+    help: 'Simulator architecture (overrides XCROSS_SIMULATOR_ARCH).',
+    allowed: ['x86_64', 'arm64'],
+  )
   ..addOption(
     'target',
     abbr: 't',

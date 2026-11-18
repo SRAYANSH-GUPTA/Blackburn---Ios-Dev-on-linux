@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"blackburn/internal/config"
 )
@@ -16,11 +17,15 @@ const BuildTask = "Blackburn: build simulator"
 const ShimName = "blackburn_dap.dart"
 const UDIDToken = "__BLACKBURN_LEASED_UDID__"
 
-type Options struct{ Mode, Host, Arch string }
+type Options struct{ Mode, Host, Arch, Root string }
 
 // Generate validates every input before writing any file. Changed originals are
 // retained once as .blackburn-backup, including their JSONC comments.
 func Generate(dir string, o Options) error {
+	root, err := filepath.Abs(o.Root)
+	if err != nil {
+		return err
+	}
 	base := filepath.Join(dir, ".vscode")
 	if info, err := os.Lstat(base); err == nil && (info.Mode()&os.ModeSymlink != 0 || !info.IsDir()) {
 		return fmt.Errorf(".vscode must be a real directory")
@@ -54,14 +59,14 @@ func Generate(dir string, o Options) error {
 		}
 		docs[name] = doc
 	}
-	env := map[string]any{"XCROSS": "true", "XCROSS_SIMULATOR_HOST": o.Host, "XCROSS_SIMULATOR_ARCH": o.Arch}
+	env := map[string]any{"XCROSS": "true", "XCROSS_SIMULATOR_HOST": o.Host, "XCROSS_SIMULATOR_ARCH": o.Arch, "PATH": filepath.Join(root, "bin") + ":${env:PATH}"}
 	launch := map[string]any{"name": LaunchName, "type": "dart", "request": "launch", "debuggerType": "dart", "program": "lib/main.dart", "cwd": "${workspaceFolder}", "env": env, "args": []any{"--target-platform", "simulator", "--udid", UDIDToken, "--debug"}, "preLaunchTask": ReadyTask}
 	if err := upsert(docs["launch.json"], "configurations", "name", launch); err != nil {
 		return err
 	}
 	docs["launch.json"]["version"] = "0.2.0"
-	ready := map[string]any{"label": ReadyTask, "type": "process", "command": "blackburn", "args": []any{"ide", "f5", "--dir=${workspaceFolder}", "--mode=" + o.Mode}, "options": map[string]any{"cwd": "${workspaceFolder}"}, "problemMatcher": []any{}}
-	build := map[string]any{"label": BuildTask, "type": "process", "command": "xcross", "args": []any{"flutter", "build", "--target-platform", "simulator", "--debug"}, "dependsOn": ReadyTask, "options": map[string]any{"cwd": "${workspaceFolder}", "env": env}, "problemMatcher": []any{}}
+	ready := map[string]any{"label": ReadyTask, "type": "process", "command": filepath.Join(root, "bin", "blackburn"), "args": []any{"ide", "f5", "--dir=${workspaceFolder}", "--mode=" + o.Mode}, "options": map[string]any{"cwd": "${workspaceFolder}"}, "problemMatcher": []any{}}
+	build := map[string]any{"label": BuildTask, "type": "process", "command": filepath.Join(root, "bin", "xcross"), "args": []any{"flutter", "build", "--target-platform", "simulator", "--debug"}, "dependsOn": ReadyTask, "options": map[string]any{"cwd": "${workspaceFolder}", "env": env}, "problemMatcher": []any{}}
 	if err := upsert(docs["tasks.json"], "tasks", "label", ready, build); err != nil {
 		return err
 	}
@@ -84,7 +89,8 @@ func Generate(dir string, o Options) error {
 		}
 		outputs[name] = append(b, '\n')
 	}
-	outputs[ShimName] = []byte(shim)
+	encodedRoot, _ := json.Marshal(root)
+	outputs[ShimName] = []byte(strings.ReplaceAll(shim, "__BLACKBURN_ROOT_JSON__", strings.ReplaceAll(string(encodedRoot), "$", `\$`)))
 	for _, name := range names {
 		b := outputs[name]
 		old := originals[name]

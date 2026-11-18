@@ -2,15 +2,69 @@ import 'package:cli_kit/host/linux/linux_host.dart';
 import 'package:darwin_sdk_kit/target/simulator/simulator_build_platform.dart';
 import 'package:darwin_sdk_kit/target/simulator/simulator_target.dart';
 import 'package:test/test.dart';
+import 'package:xcross/src/composition/cli/flutter_build_command.dart';
+import 'package:xcross/src/composition/ios_target.dart';
 import 'package:xcross/src/composition/simulator/simctl_simulator_launcher.dart';
 import 'package:xcross/src/shared/flutter/build/ios_deployment_target.dart';
 import 'package:xcross/src/shared/flutter/build/runner_shim.dart';
 import 'package:xcross/src/target/simulator/flutter/simulator_flutter_target.dart';
 
+import '../cli/runtime_fixture.dart';
+
 void main() {
+  test('CLI arch overrides env through composed simulator build features', () {
+    final runtime = testRuntime(
+      environment: {'XCROSS_SIMULATOR_ARCH': 'x86_64'},
+    );
+    final command = FlutterBuildCommand(runtime);
+    final parser = command.argParser;
+    for (final arch in ['arm64', 'x86_64']) {
+      final options = command.parseOptions(
+        parser.parse(['--target-platform', 'simulator', '--arch', arch]),
+      );
+      final features = composeBuildFeatures(
+        options.targetPlatform,
+        runtime,
+        architecture: options.arch,
+      );
+      expect(
+        features.target.buildPlatform.swiftSdkTriple,
+        '$arch-apple-ios-simulator',
+      );
+    }
+    expect(command.parseOptions(parser.parse([])).arch, isNull);
+    expect(() => parser.parse(['--arch', 'sparc']), throwsA(anything));
+  });
+
+  test('simulator host defaults to macbox on Linux and honors overrides', () {
+    expect(SimctlSimulatorLauncher(testRuntime()).host, 'macbox');
+    expect(
+      SimctlSimulatorLauncher(
+        testRuntime(environment: {'XCROSS_SIMULATOR_HOST': 'my-air'}),
+      ).host,
+      'my-air',
+    );
+    expect(
+      SimctlSimulatorLauncher(
+        testRuntime(environment: {'XCROSS_SIMULATOR_HOST': ''}),
+      ).host,
+      '',
+    );
+  });
+
   test(
     'Intel Linux defaults to x86_64; env and explicit architecture override',
     () {
+      for (final arch in ['x64', 'x86_64']) {
+        expect(
+          SimulatorTarget(LinuxHost(architecture: arch)).selectedArchitecture,
+          'x86_64',
+        );
+      }
+      expect(
+        SimulatorTarget(LinuxHost(architecture: 'arm64')).selectedArchitecture,
+        'arm64',
+      );
       final host = LinuxHost(architecture: 'x64');
       expect(
         SimulatorTarget(host).buildPlatform.swiftSdkTriple,

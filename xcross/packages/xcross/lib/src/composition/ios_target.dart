@@ -16,12 +16,13 @@ XcrossBuildFeatures<T> composeBuildFeatures<T extends PlatformHostInterface>(
   String targetPlatform,
   XcrossRuntime<T> runtime, {
   bool ipa = false,
+  String? architecture,
 }) => switch (targetPlatform) {
   'iphone' => IPhoneBuildFeatures(runtime),
   'simulator' when ipa => throw XcrossError(
     'Simulator builds cannot be packaged as an IPA.',
   ),
-  'simulator' => SimulatorBuildFeatures(runtime),
+  'simulator' => SimulatorBuildFeatures(runtime, architecture: architecture),
   _ => throw XcrossError(
     'Unknown target platform "$targetPlatform". Choose iphone or simulator.',
   ),

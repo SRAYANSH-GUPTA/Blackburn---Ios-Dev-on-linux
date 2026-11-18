@@ -25,7 +25,8 @@ check_setup_space() {
     return 1
   fi
 }
-xcross() { dart run "$ROOT/xcross/packages/xcross/bin/xcross.dart" "$@"; }
+export PATH="$ROOT/bin:$PATH"
+xcross() { "$ROOT/bin/xcross" "$@"; }
 usage() {
   cat <<'EOF'
 Usage: scripts/blackburn-macbox.sh COMMAND [arguments]

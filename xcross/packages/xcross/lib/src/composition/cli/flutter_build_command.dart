@@ -18,6 +18,12 @@ part 'flutter_build_command.g.dart';
 @internal
 class CommonFlutterArgs {
   @CliOption(
+    allowed: ['x86_64', 'arm64'],
+    help: 'Simulator architecture (overrides XCROSS_SIMULATOR_ARCH).',
+  )
+  late String? arch;
+
+  @CliOption(
     abbr: 't',
     defaultsTo: 'lib/main.dart',
     help: 'The main entry-point file of the application.',
@@ -152,6 +158,7 @@ final class FlutterBuildCommand<T extends PlatformHostInterface>
       options.targetPlatform,
       runtime,
       ipa: options.ipa,
+      architecture: options.arch,
     );
     final buildRuntime = features.flutterRuntime;
     final projectRoot = runtime.host.paths.context.current;

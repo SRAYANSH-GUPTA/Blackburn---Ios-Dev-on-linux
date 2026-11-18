@@ -85,7 +85,7 @@ func (a *App) ide(c config.Config, args []string) error {
 		return fail("INCOMPATIBLE_ARCH", "unsupported simulator architecture "+arch, 3)
 	}
 	environment := map[string]string{"XCROSS": "true", "XCROSS_SIMULATOR_HOST": ep.SSH, "XCROSS_SIMULATOR_ARCH": arch}
-	command := []string{"xcross", "flutter", "run", "--target", "lib/main.dart", "--target-platform", "simulator", "--udid", ide.UDIDToken, "--debug"}
+	command := []string{filepath.Join(a.Root, "bin", "xcross"), "flutter", "run", "--target", "lib/main.dart", "--target-platform", "simulator", "--udid", ide.UDIDToken, "--debug"}
 	result := map[string]any{"schema_version": 1, "project": dir, "mode": m, "environment": environment, "command": command, "dry_run": dry, "steps": []string{"ensure profile and guest ready", "prewarm Metal", "lease and boot simulator", "xcross owns build, launch, tunnel and reload"}}
 	if dry {
 		a.json(result)
@@ -97,7 +97,7 @@ func (a *App) ide(c config.Config, args []string) error {
 	}
 	defer unlock()
 	if op == "config" {
-		if err = ide.Generate(dir, ide.Options{Mode: m, Host: ep.SSH, Arch: arch}); err != nil {
+		if err = ide.Generate(dir, ide.Options{Mode: m, Host: ep.SSH, Arch: arch, Root: a.Root}); err != nil {
 			return err
 		}
 		if asJSON {

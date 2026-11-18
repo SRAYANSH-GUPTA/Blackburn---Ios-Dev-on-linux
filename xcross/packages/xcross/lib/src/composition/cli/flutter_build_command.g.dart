@@ -8,6 +8,7 @@ part of 'flutter_build_command.dart';
 
 FlutterBuildArgs _$parseFlutterBuildArgsResult(ArgResults result) =>
     FlutterBuildArgs()
+      ..arch = result['arch'] as String?
       ..target = result['target'] as String
       ..flavor = result['flavor'] as String?
       ..dartDefine = result['dart-define'] as List<String>
@@ -25,6 +26,11 @@ FlutterBuildArgs _$parseFlutterBuildArgsResult(ArgResults result) =>
       ..ipa = result['ipa'] as bool;
 
 ArgParser _$populateFlutterBuildArgsParser(ArgParser parser) => parser
+  ..addOption(
+    'arch',
+    help: 'Simulator architecture (overrides XCROSS_SIMULATOR_ARCH).',
+    allowed: ['x86_64', 'arm64'],
+  )
   ..addOption(
     'target',
     abbr: 't',

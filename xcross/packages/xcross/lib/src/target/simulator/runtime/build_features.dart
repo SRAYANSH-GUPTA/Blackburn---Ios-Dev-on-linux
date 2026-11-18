@@ -13,7 +13,8 @@ import 'package:xcross/src/target/simulator/flutter/simulator_flutter_target.dar
 @internal
 final class SimulatorBuildFeatures<T extends PlatformHostInterface>
     implements XcrossBuildFeatures<T> {
-  SimulatorBuildFeatures(this.runtime) : target = SimulatorTarget(runtime.host);
+  SimulatorBuildFeatures(this.runtime, {String? architecture})
+    : target = SimulatorTarget(runtime.host, architecture: architecture);
   final XcrossRuntime<T> runtime;
   @override
   final SimulatorTarget<T> target;

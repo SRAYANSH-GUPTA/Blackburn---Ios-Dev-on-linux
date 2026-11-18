@@ -148,6 +148,10 @@ func (a *App) initialize(c config.Config, args []string) error {
 	if e = a.prepareWorkspace(); e != nil {
 		return e
 	}
+	if e = a.installXcross(); e != nil {
+		return e
+	}
+	fmt.Fprintf(a.Out, "Bundled xcross: %s (existing binary retained as .upstream-backup)\n", a.xcrossLink())
 	c = optimized(c, r)
 	if e = config.Save(a.ConfigPath, c); e != nil {
 		return e
@@ -263,6 +267,10 @@ func (a *App) appliance(c config.Config, args []string) error {
 	}
 	// Imported profiles are hardware-specific; preserve recipient endpoint settings
 	// and replace local allocations with this host's measured defaults.
+	if e = a.installXcross(); e != nil {
+		return e
+	}
+	fmt.Fprintf(a.Out, "Bundled xcross: %s (existing binary retained as .upstream-backup)\n", a.xcrossLink())
 	c = optimized(c, r)
 	if e = c.Validate(); e != nil {
 		return e

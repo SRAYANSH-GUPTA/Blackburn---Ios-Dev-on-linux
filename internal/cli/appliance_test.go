@@ -16,6 +16,9 @@ import (
 func portableApp(t *testing.T) *App {
 	t.Helper()
 	a, _, _ := testApp(t)
+	a.Env = append(a.Env, "HOME="+t.TempDir())
+	os.MkdirAll(filepath.Join(a.Root, "bin"), 0755)
+	os.WriteFile(filepath.Join(a.Root, "bin", "xcross"), []byte("#!/bin/sh\n"), 0755)
 	a.ProbeHardware = func() (hardware.Report, error) {
 		return hardware.Report{TotalMiB: 32768, GuestMiB: 10240, VCPUs: 2, CPUList: "0-1", CPUs: []hardware.CPU{{ID: 0, Kind: "P"}, {ID: 1, Kind: "P"}}, GPUs: []hardware.GPU{{Device: "0x7d55"}}, Power: "AC"}, nil
 	}
@@ -112,6 +115,9 @@ func TestInitAutoAndInteractive(t *testing.T) {
 		}
 		if n := a.Main(args); n != 0 {
 			t.Fatal(n, a.Err)
+		}
+		if target, err := os.Readlink(a.xcrossLink()); err != nil || target != filepath.Join(a.Root, "bin", "xcross") {
+			t.Fatal(target, err)
 		}
 		c, e := config.Load(a.ConfigPath)
 		if e != nil || c.CPUSet != "0-1" || c.Profiles["studio"].CPUs != 2 || c.Profiles["hybrid"].Memory != 0 {

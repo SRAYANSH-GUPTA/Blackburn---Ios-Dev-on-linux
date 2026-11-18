@@ -21,7 +21,7 @@ func testApp(t *testing.T) (*App, *bytes.Buffer, *[][]string) {
 	dir := t.TempDir()
 	out := &bytes.Buffer{}
 	calls := [][]string{}
-	a := &App{Out: out, Err: &bytes.Buffer{}, Root: dir, ConfigPath: filepath.Join(dir, "config.toml"), StateDir: filepath.Join(dir, "state"), Env: []string{"MACBOX_CONFIG=" + filepath.Join(dir, "absent.env"), "MACBOX_HOME=" + dir}, Timeout: time.Second}
+	a := &App{Out: out, Err: &bytes.Buffer{}, Root: dir, ConfigPath: filepath.Join(dir, "config.toml"), StateDir: filepath.Join(dir, "state"), Env: []string{"MACBOX_CONFIG=" + filepath.Join(dir, "absent.env"), "MACBOX_HOME=" + dir, "HOME=" + dir}, Timeout: time.Second}
 	a.Run = func(_ context.Context, args, env []string) (string, error) {
 		calls = append(calls, append([]string{}, args...))
 		joined := strings.Join(args, " ")
@@ -112,6 +112,11 @@ func TestDoctorJSONFailureSingleObject(t *testing.T) {
 }
 func TestDoctorHybridSkipsLocalRequirements(t *testing.T) {
 	a, out, calls := testApp(t)
+	os.MkdirAll(filepath.Join(a.Root, "bin"), 0755)
+	os.WriteFile(filepath.Join(a.Root, "bin", "xcross"), []byte("#!/bin/sh\n"), 0755)
+	if err := a.installXcross(); err != nil {
+		t.Fatal(err)
+	}
 	a.Run = func(_ context.Context, args, env []string) (string, error) {
 		*calls = append(*calls, args)
 		return "ok", nil
@@ -120,7 +125,7 @@ func TestDoctorHybridSkipsLocalRequirements(t *testing.T) {
 		t.Fatal(exit, out.String())
 	}
 	for _, c := range *calls {
-		if c[0] != "ssh" {
+		if c[0] != "ssh" && c[0] != filepath.Join(a.Root, "bin", "xcross") {
 			t.Fatal("local dependency in hybrid", c)
 		}
 	}

@@ -26,8 +26,9 @@ func TestDartShimDAPBridge(t *testing.T) {
 	if _, err := exec.LookPath("python3"); err != nil {
 		t.Skip("Python unavailable")
 	}
-	dir := t.TempDir()
-	Generate(dir, Options{"headless", "macbox", "x86_64"})
+	dir := filepath.Join(t.TempDir(), "checkout $with spaces")
+	os.MkdirAll(dir, 0700)
+	Generate(dir, Options{"headless", "macbox", "x86_64", dir})
 	runtime := filepath.Join(dir, ".dart_tool/blackburn")
 	os.MkdirAll(runtime, 0700)
 	os.WriteFile(filepath.Join(runtime, "launch.json"), []byte(`{"device":"SIM-LIVE","environment":{"XCROSS_SIMULATOR_HOST":"macbox","XCROSS_SIMULATOR_ARCH":"x86_64"}}`), 0600)
@@ -53,7 +54,8 @@ send({'type':'event','event':'output','body':{'output':'ice: ws://127.0.0.1:8181
 send({'type':'response','success':True,'body':m['arguments']})
 read()
 `
-	os.WriteFile(filepath.Join(dir, "xcross"), []byte(fake), 0700)
+	os.MkdirAll(filepath.Join(dir, "bin"), 0700)
+	os.WriteFile(filepath.Join(dir, "bin", "xcross"), []byte(fake), 0700)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, dart, filepath.Join(dir, ".vscode", ShimName), "debug_adapter")

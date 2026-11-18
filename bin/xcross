@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Compile the bundled workspace once per source revision, preserving the app cwd.
+set -euo pipefail
+root=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/.." && pwd)
+export PATH="$root/bin:$PATH"
+cache=${XDG_CACHE_HOME:-$HOME/.cache}/blackburn/xcross/$(printf '%s' "$root" | sha256sum | cut -c1-16)
+mkdir -p "$cache"
+exec 9>"$cache/build.lock"
+flock 9
+fingerprint() {
+  (cd "$root/xcross" && find packages pubspec.yaml pubspec.lock -type f \( -name '*.dart' -o -name 'pubspec.yaml' -o -name 'pubspec.lock' -o -name '*.c' -o -name '*.h' \) -print0 | sort -z | xargs -0 sha256sum | sha256sum)
+}
+# Native libraries must remain beside the executable, including for running DAPs.
+revision=$( { fingerprint; dart --version; } | sha256sum | cut -c1-64)
+build="$cache/$revision"
+binary="$build/bundle/bin/xcross"
+if [[ ! -x "$binary" ]]; then
+  trap 'rm -rf -- "$build.tmp"' EXIT
+  (cd "$root/xcross" && dart pub get && dart build cli --target packages/xcross/bin/xcross.dart --output "$build.tmp") >&2
+  mv -- "$build.tmp" "$build"
+fi
+flock -u 9
+exec 9>&-
+exec "$binary" "$@"

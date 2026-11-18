@@ -20,7 +20,10 @@ final class SimctlSimulatorLauncher<T extends PlatformHostInterface> {
   SimctlSimulatorLauncher(this.runtime);
   final XcrossRuntime<T> runtime;
   Map<String, String> get _env => runtime.runner.effectiveEnvironment;
-  String? get _host => _env['XCROSS_SIMULATOR_HOST'];
+  String? get host =>
+      _env['XCROSS_SIMULATOR_HOST'] ??
+      (runtime.host.name == 'linux' ? 'macbox' : null);
+  String? get _host => host;
 
   static String quote(String value) => "'${value.replaceAll("'", r"'\''")}'";
 

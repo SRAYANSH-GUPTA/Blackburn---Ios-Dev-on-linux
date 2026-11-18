@@ -17,7 +17,7 @@ func TestGenerateMergesAndIsIdempotent(t *testing.T) {
 	os.WriteFile(filepath.Join(base, "launch.json"), []byte(original), 0600)
 	os.WriteFile(filepath.Join(base, "tasks.json"), []byte(`{"tasks":[{"label":"User","command":"echo"}],"inputs":[{"id":"keep"}]}`), 0600)
 	os.WriteFile(filepath.Join(base, "settings.json"), []byte(`{"editor.fontSize":17,"dart.hotReloadOnSave":"all"}`), 0600)
-	o := Options{"headless", "macbox", "x86_64"}
+	o := Options{"headless", "macbox", "x86_64", dir}
 	if err := Generate(dir, o); err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestGenerateRefusesUnsafeInputBeforeWrites(t *testing.T) {
 			base := filepath.Join(dir, ".vscode")
 			os.Mkdir(base, 0700)
 			os.WriteFile(filepath.Join(base, "tasks.json"), []byte(bad), 0600)
-			if err := Generate(dir, Options{"headless", "macbox", "x86_64"}); err == nil {
+			if err := Generate(dir, Options{"headless", "macbox", "x86_64", dir}); err == nil {
 				t.Fatal("accepted malformed config")
 			}
 			if _, err := os.Stat(filepath.Join(base, "launch.json")); !os.IsNotExist(err) {
@@ -136,10 +136,10 @@ vm-service: ws://127.0.0.1:8181/
 
 func TestRegenerateWithAnotherMode(t *testing.T) {
 	dir := t.TempDir()
-	if err := Generate(dir, Options{"headless", "macbox", "x86_64"}); err != nil {
+	if err := Generate(dir, Options{"headless", "macbox", "x86_64", dir}); err != nil {
 		t.Fatal(err)
 	}
-	if err := Generate(dir, Options{"hybrid", "my-air", "arm64"}); err != nil {
+	if err := Generate(dir, Options{"hybrid", "my-air", "arm64", dir}); err != nil {
 		t.Fatal(err)
 	}
 	b, _ := os.ReadFile(filepath.Join(dir, ".vscode/launch.json"))
@@ -154,6 +154,30 @@ func TestRegenerateWithAnotherMode(t *testing.T) {
 	}
 	b, _ = os.ReadFile(filepath.Join(dir, ".vscode/tasks.json"))
 	if !strings.Contains(string(b), "--mode=hybrid") {
+		t.Fatal(string(b))
+	}
+}
+
+func TestGeneratedUsesBundledTools(t *testing.T) {
+	dir := t.TempDir()
+	root := filepath.Join(t.TempDir(), "checkout with spaces")
+	if err := Generate(dir, Options{Mode: "headless", Host: "macbox", Arch: "x86_64", Root: root}); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(filepath.Join(dir, ".vscode", "tasks.json"))
+	var tasks struct {
+		Tasks []struct {
+			Command string `json:"command"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(b, &tasks); err != nil {
+		t.Fatal(err)
+	}
+	if tasks.Tasks[0].Command != filepath.Join(root, "bin", "blackburn") || tasks.Tasks[1].Command != filepath.Join(root, "bin", "xcross") {
+		t.Fatal(string(b))
+	}
+	b, _ = os.ReadFile(filepath.Join(dir, ".vscode", ShimName))
+	if !strings.Contains(string(b), root) || strings.Contains(string(b), "Process.start('xcross'") {
 		t.Fatal(string(b))
 	}
 }

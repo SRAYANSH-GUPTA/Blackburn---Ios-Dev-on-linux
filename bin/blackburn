@@ -14,4 +14,5 @@ fi
 flock -u 9
 exec 9>&-
 export BLACKBURN_ROOT="$root"
+export PATH="$root/bin:$PATH"
 exec "$binary" "$@"

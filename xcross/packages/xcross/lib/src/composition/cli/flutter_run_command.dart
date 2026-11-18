@@ -202,7 +202,11 @@ final class FlutterRunCommand<T extends PlatformHostInterface>
   @override
   Future<void> run() async {
     if (options.verbose) runtime.log.setVerbose();
-    features = composeBuildFeatures(options.targetPlatform, runtime);
+    features = composeBuildFeatures(
+      options.targetPlatform,
+      runtime,
+      architecture: options.arch,
+    );
 
     final buildMode = flutterBuildModeOf(
       debug: options.debug,
