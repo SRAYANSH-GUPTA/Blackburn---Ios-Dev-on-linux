@@ -52,6 +52,7 @@ case "${1:-status}" in
         --ui-title="${MACBOX_STREAM_TITLE:-macbox}" --ui-sidebar-show-audio-settings=false \
         --ui-sidebar-show-gamepads=false --ui-sidebar-show-webcam=false \
         --ui-sidebar-show-sharing=false --ui-sidebar-show-apps=false --ui-sidebar-show-files=false \
+        ${MACBOX_STREAM_ARGS:-} \
         >"$L/selkies.log" 2>&1 </dev/null &
     fi
     echo selkies >"$RUN/stream"
